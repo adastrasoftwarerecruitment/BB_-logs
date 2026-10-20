@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Battery Service Log</title>
+<meta name="theme-color" content="#F5B800">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Battery Log">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column built for thumbs. Two tabs at the bottom (New entry / Records); the form is one ruled panel in five groups. Graphite and caution-amber, like a workshop tag. */
+:root{
+  --bg:#E8EDF0; --panel:#FFFFFF; --field:#F1F4F6; --ink:#101D27; --muted:#566772; --line:#CAD4DA;
+  --accent:#F5B800; --accent-ink:#101D27; --ok:#1B7A47; --warn:#8F5F00; --bad:#B3261E;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D171E; --panel:#15222B; --field:#0F1A22; --ink:#E7EEF2; --muted:#93A6B2; --line:#2A3B46;
+    --ok:#59C98A; --warn:#E8B64A; --bad:#FF8F86; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D171E; --panel:#15222B; --field:#0F1A22; --ink:#E7EEF2; --muted:#93A6B2; --line:#2A3B46;
+  --ok:#59C98A; --warn:#E8B64A; --bad:#FF8F86; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0;background:var(--bg); color:var(--ink); font:400 15px/1.45 var(--body); -webkit-text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:max(20px,env(safe-area-inset-top,0px));padding-bottom:140px;
+}
+.app{max-width:640px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px 12px;flex-wrap:wrap;margin-bottom:18px}
+.eyebrow{margin:0 0 4px;font:600 14px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font:700 36px/1 var(--display);letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+.chip{--dot:var(--muted);display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:4px 11px;font-size:12px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--dot)}
+.chip[data-mode="cloud"]{--dot:var(--ok)}
+.chip[data-mode="local"]{--dot:var(--ok)}
+
+h2{margin:0 0 12px;font:700 24px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.editbar{margin:0 0 12px;padding:10px 12px;border:1px solid var(--warn);border-radius:6px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));font-size:14px}
+.editbar b{font-family:var(--mono);font-weight:500}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 16px}
+.grp{padding:16px 0}
+.grp+.grp{border-top:1px solid var(--line)}
+.grp h3{margin:0 0 12px;font:600 15px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+.span2{grid-column:1/-1}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lab{font:600 14px/1.1 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.in{display:flex;align-items:center;min-height:46px;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:0 12px}
+.in:focus-within{border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 55%,transparent)}
+.in:has([aria-invalid="true"]){border-color:var(--bad)}
+.in input,.in select,.in textarea{flex:1;min-width:0;width:100%;border:0;background:transparent;color:inherit;font:inherit;font-size:16px;outline:0;padding:10px 0}
+.in.ta{align-items:flex-start}
+.in textarea{min-height:92px;resize:vertical}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.u{padding-left:8px;font:400 13px var(--mono);color:var(--muted)}
+.hint{margin:-4px 0 0;font-size:13px;color:var(--warn)}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;min-height:46px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--muted);font:600 17px var(--display);letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
+#solvedNo:checked+label{border-color:var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--panel))}
+#solvedYes:checked+label{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--panel))}
+.seg input:focus-visible+label{outline:2px solid var(--ink);outline-offset:2px}
+
+.errs{margin-top:14px;padding:10px 12px;border:1px solid var(--bad);border-radius:6px;background:color-mix(in srgb,var(--bad) 10%,var(--panel));font-size:14px}
+.errs b{display:block;margin-bottom:2px;color:var(--bad)}
+.errs p{margin:2px 0}
+.actions{display:flex;gap:10px;margin-top:16px}
+.btn{min-height:52px;border-radius:6px;border:1px solid transparent;font:700 20px var(--display);letter-spacing:.07em;text-transform:uppercase}
+.btn.primary{flex:1;background:var(--accent);color:var(--accent-ink)}
+.btn.primary:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--ink);padding:0 16px;font-weight:600;font-size:17px}
+.btn.small{min-height:40px;font-size:15px;padding:0 14px}
+
+.tools{display:flex;gap:10px;margin-bottom:12px}
+.tools .in{flex:1}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font:600 15px var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.summary{margin:0 0 12px;font-size:13px;color:var(--muted)}
+.list{display:grid;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 10px;flex-wrap:wrap}
+.c-top>div:first-child{min-width:0}
+.bno{font:600 19px/1.2 var(--mono);overflow-wrap:anywhere}
+.bms{font:400 13px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;padding:2px 8px;border:1px solid currentColor;border-radius:4px;font:600 13px/1.4 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:transparent}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.pill.open{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.pill.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat span{display:block;font:600 12px/1.2 var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.stat b{font:500 16px var(--mono);font-variant-numeric:tabular-nums}
+.facts{display:grid;gap:2px;font:400 13px var(--mono);overflow-wrap:anywhere}
+.facts em{font-style:normal;color:var(--muted)}
+.dates{display:flex;gap:4px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.dates b{font:500 13px var(--mono);color:var(--ink)}
+.desc{margin:0;padding-top:10px;border-top:1px solid var(--line);font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+.c-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.c-actions .ask{flex:1;min-width:120px;font-size:14px}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.note{margin:10px 0 0;font-size:13px;color:var(--muted);max-width:52ch}
+.teams{margin-top:18px;padding:0 16px}
+.teams summary{cursor:pointer;min-height:52px;display:flex;align-items:center;font:600 15px var(--display);letter-spacing:.12em;text-transform:uppercase}
+.tbody{padding:0 0 16px}
+.tbody .note{margin:0 0 14px}
+.chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px}
+.chk input{width:22px;height:22px;margin:0;accent-color:var(--accent)}
+.tbody .foot{margin-top:14px}
+.tbody .foot .btn.primary{flex:1}
+.empty{padding:22px 18px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+.empty h3{margin:0 0 6px;font:700 22px var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.empty p{margin:0 0 14px;max-width:46ch}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs-in{max-width:640px;margin:0 auto;display:flex}
+.tab{flex:1;min-height:60px;background:none;border:0;border-top:3px solid transparent;color:var(--muted);font:600 19px var(--display);letter-spacing:.09em;text-transform:uppercase}
+.tab[aria-current="page"]{color:var(--ink);border-top-color:var(--accent)}
+.tab .n{margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--field);font:500 12px var(--mono);letter-spacing:0}
+.toast{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px);
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:360px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Pack service bench</p>
+      <h1>Battery Service Log</h1>
+    </div>
+    <span class="chip" id="chip" data-mode="local"><i></i><span id="chipText">Saved on this phone</span></span>
+  </header>
+
+  <main>
+    <section id="viewEntry">
+      <h2 id="formTitle">New inward entry</h2>
+      <div class="editbar" id="editBar" hidden>Editing <b id="editName"></b>. Saving replaces the stored entry.</div>
+      <form id="form" novalidate autocomplete="off">
+        <div class="panel">
+          <section class="grp">
+            <h3>Identification</h3>
+            <div class="grid">
+              <label class="f" for="inward"><span class="lab">Inward date</span><span class="in"><input id="inward" type="date" required></span></label>
+              <label class="f" for="batteryNo"><span class="lab">Battery no.</span><span class="in"><input id="batteryNo" class="num" type="text" autocapitalize="characters" spellcheck="false" required></span></label>
+              <p class="hint span2" id="batteryHint" hidden></p>
+              <label class="f span2" for="bmsNo"><span class="lab">BMS no.</span><span class="in"><input id="bmsNo" class="num" type="text" autocapitalize="characters" spellcheck="false"></span></label>
+            </div>
+          </section>
+
+          <section class="grp">
+            <h3>Voltage</h3>
+            <div class="grid">
+              <label class="f" for="packV"><span class="lab">Pack voltage</span><span class="in"><input id="packV" class="num" type="number" step="any" inputmode="decimal"><i class="u">V</i></span></label>
+              <label class="f" for="diffV"><span class="lab">Diff voltage</span><span class="in"><input id="diffV" class="num" type="number" step="any" inputmode="decimal" placeholder="Auto"><i class="u">V</i></span></label>
+              <label class="f" for="maxStrV"><span class="lab">Max string voltage</span><span class="in"><input id="maxStrV" class="num" type="number" step="any" inputmode="decimal"><i class="u">V</i></span></label>
+              <label class="f" for="maxStrNo"><span class="lab">Max string no.</span><span class="in"><input id="maxStrNo" class="num" type="number" step="1" inputmode="numeric"></span></label>
+              <label class="f" for="minStrV"><span class="lab">Min string voltage</span><span class="in"><input id="minStrV" class="num" type="number" step="any" inputmode="decimal"><i class="u">V</i></span></label>
+              <label class="f" for="minStrNo"><span class="lab">Min string no.</span><span class="in"><input id="minStrNo" class="num" type="number" step="1" inputmode="numeric"></span></label>
+            </div>
+          </section>
+
+          <section class="grp">
+            <h3>Temperature</h3>
+            <div class="grid">
+              <label class="f" for="maxT"><span class="lab">Max temp</span><span class="in"><input id="maxT" class="num" type="number" step="any" inputmode="decimal"><i class="u">°C</i></span></label>
+              <label class="f" for="minT"><span class="lab">Min temp</span><span class="in"><input id="minT" class="num" type="number" step="any" inputmode="decimal"><i class="u">°C</i></span></label>
+            </div>
+          </section>
+
+          <section class="grp">
+            <h3>Fuel gauge and capacity</h3>
+            <div class="grid">
+              <label class="f" for="soc"><span class="lab">Fuel gauge o/p SOC</span><span class="in"><input id="soc" class="num" type="number" step="any" inputmode="decimal"><i class="u">%</i></span></label>
+              <label class="f" for="capAh"><span class="lab">Battery capacity</span><span class="in"><input id="capAh" class="num" type="number" step="any" inputmode="decimal"><i class="u">Ah</i></span></label>
+            </div>
+          </section>
+
+          <section class="grp">
+            <h3>Service outcome</h3>
+            <div class="grid">
+              <div class="f span2">
+                <span class="lab" id="solvedLab">Problem solved</span>
+                <div class="seg" role="radiogroup" aria-labelledby="solvedLab">
+                  <input type="radio" name="solved" id="solvedNo" value="no" checked><label for="solvedNo">Not solved</label>
+                  <input type="radio" name="solved" id="solvedYes" value="yes"><label for="solvedYes">Solved</label>
+                </div>
+              </div>
+              <label class="f span2" for="desc"><span class="lab">Problem description</span><span class="in ta"><textarea id="desc" placeholder="Fault found and work done"></textarea></span></label>
+              <label class="f" for="status"><span class="lab">Status</span><span class="in"><select id="status"></select></span></label>
+              <label class="f" for="outward"><span class="lab">Outward date</span><span class="in"><input id="outward" type="date"></span></label>
+            </div>
+          </section>
+        </div>
+
+        <div class="errs" id="errs" role="alert" hidden></div>
+        <div class="actions">
+          <button class="btn primary" id="saveBtn" type="submit">Save entry</button>
+          <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="viewRecords" hidden>
+      <h2>Records</h2>
+      <div class="tools">
+        <label class="in" for="q"><input id="q" type="search" placeholder="Search battery, BMS, notes" autocomplete="off"></label>
+        <button class="btn ghost small" id="exportBtn" type="button">Export CSV</button>
+      </div>
+      <div class="filters" id="filters">
+        <button class="fbtn" type="button" data-f="all" aria-pressed="true">All</button>
+        <button class="fbtn" type="button" data-f="open" aria-pressed="false">In workshop</button>
+        <button class="fbtn" type="button" data-f="out" aria-pressed="false">Dispatched</button>
+        <button class="fbtn" type="button" data-f="unsolved" aria-pressed="false">Not solved</button>
+      </div>
+      <p class="summary" id="summary"></p>
+      <div class="list" id="list"></div>
+      <div class="foot">
+        <button class="btn ghost small" id="backupBtn" type="button">Backup</button>
+        <button class="btn ghost small" id="restoreBtn" type="button">Restore</button>
+        <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="note">Entries are stored on this phone only. Tap Backup now and then, and before clearing browser data. Restore loads a backup file on this or another phone.</p>
+      <details class="teams panel" id="teamsBox">
+        <summary>Post entries to Teams</summary>
+        <div class="tbody">
+          <p class="note">Every saved entry is posted to your Teams group through your relay. If you have no signal, the entry waits and is sent when you are back online.</p>
+          <div class="grid">
+            <label class="f span2" for="tUrl"><span class="lab">Relay address</span><span class="in"><input id="tUrl" type="url" placeholder="https://your-relay.workers.dev" autocomplete="off" spellcheck="false" autocapitalize="off"></span></label>
+            <label class="f span2" for="tKey"><span class="lab">App key</span><span class="in"><input id="tKey" type="password" autocomplete="off" spellcheck="false" autocapitalize="off"></span></label>
+            <label class="chk span2" for="tAuto"><input id="tAuto" type="checkbox" checked><span>Post to Teams each time I save an entry</span></label>
+          </div>
+          <div class="foot">
+            <button class="btn primary small" id="tSave" type="button">Save settings</button>
+            <button class="btn ghost small" id="tTest" type="button">Send test</button>
+          </div>
+          <p class="note" id="tStatus" role="status"></p>
+          <div class="foot">
+            <button class="btn ghost small" id="tFlush" type="button" hidden>Send waiting now</button>
+            <button class="btn ghost small danger" id="tClear" type="button" hidden>Clear waiting</button>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-in">
+    <button class="tab" id="tabEntry" type="button" aria-current="page">New entry</button>
+    <button class="tab" id="tabRecords" type="button">Records<span class="n" id="count">0</span></button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var STATUSES=['Received','Under diagnosis','In repair','Testing','Ready for outward','Dispatched'];
+var TONE={'Received':'','Under diagnosis':'open','In repair':'open','Testing':'open','Ready for outward':'ok','Dispatched':'ok'};
+var NUM=['packV','maxStrV','maxStrNo','minStrV','minStrNo','maxT','minT','diffV','soc','capAh'];
+var TXT=['inward','batteryNo','bmsNo','desc','status','outward'];
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var LS='batteryServiceLog.v1';
+
+var mode='local', loaded=false, records=[];
+var filter='all', q='', editingId=null, pendingDelete=null, saving=false, diffManual=false, toastTimer=0;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtDate(iso){if(!iso)return '—';var p=iso.split('-');return p.length===3?(+p[2])+' '+MON[+p[1]-1]+' '+p[0]:iso}
+function round3(x){return Math.round(x*1000)/1000}
+function val(v,u){return v==null?'—':String(v)+(u||'')}
+function numOf(sel){var v=$(sel).value.trim();return v===''?null:Number(v)}
+function byDateDesc(a,b){return (b.inward||'').localeCompare(a.inward||'')||(b.createdAt||0)-(a.createdAt||0)}
+
+/* ---------- storage: shared db when available, this browser otherwise ---------- */
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch(e){return []}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(records));return true}catch(e){return false}}
+function newId(){return 'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+async function persist(rec){
+  var i=records.findIndex(function(x){return x.id===rec.id});
+  if(i<0)records.push(rec);else records[i]=rec;
+  var ok=lsSave();render();if(!ok)throw new Error('storage');
+}
+async function removeRec(id){
+  records=records.filter(function(x){return x.id!==id});var ok=lsSave();render();if(!ok)throw new Error('storage');
+}
+function goLocal(){records=lsLoad();loaded=true;render()}
+function boot(){
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  goLocal();
+  initTeams();
+}
+
+/* ---------- form ---------- */
+function readForm(){
+  var r={};
+  TXT.forEach(function(k){r[k]=($('#'+k).value||'').trim()});
+  NUM.forEach(function(k){var v=$('#'+k).value.trim();r[k]=v===''?null:Number(v)});
+  var s=document.querySelector('input[name=solved]:checked');
+  r.solved=s?s.value:'no';
+  return r;
+}
+function validate(r){
+  var e=[];
+  if(!r.inward)e.push(['inward','Enter the inward date.']);
+  if(!r.batteryNo)e.push(['batteryNo','Enter the battery number.']);
+  NUM.forEach(function(k){if(r[k]!=null&&!isFinite(r[k]))e.push([k,'Enter a valid number.'])});
+  if(r.inward&&r.outward&&r.outward<r.inward)e.push(['outward','Outward date is earlier than the inward date.']);
+  if(r.soc!=null&&(r.soc<0||r.soc>100))e.push(['soc','SOC must be between 0 and 100.']);
+  if(r.maxT!=null&&r.minT!=null&&r.minT>r.maxT)e.push(['minT','Min temp is higher than max temp.']);
+  if(r.maxStrV!=null&&r.minStrV!=null&&r.minStrV>r.maxStrV)e.push(['minStrV','Min string voltage is higher than max string voltage.']);
+  return e;
+}
+function showErrors(errs){
+  var box=$('#errs');
+  document.querySelectorAll('[aria-invalid]').forEach(function(el){el.removeAttribute('aria-invalid')});
+  if(!errs.length){box.hidden=true;box.innerHTML='';return}
+  errs.forEach(function(x){var el=$('#'+x[0]);if(el)el.setAttribute('aria-invalid','true')});
+  box.innerHTML='<b>Fix before saving</b>'+errs.map(function(x){return '<p>'+esc(x[1])+'</p>'}).join('');
+  box.hidden=false;
+}
+function autoDiff(){
+  if(diffManual)return;
+  var a=numOf('#maxStrV'),b=numOf('#minStrV');
+  $('#diffV').value=(a!=null&&b!=null&&isFinite(a)&&isFinite(b))?String(round3(a-b)):'';
+}
+function resetForm(){
+  $('#form').reset();
+  $('#inward').value=today();
+  $('#solvedNo').checked=true;
+  diffManual=false;editingId=null;
+  showErrors([]);updateHint();setEditUI();
+}
+function setEditUI(){
+  var ed=!!editingId;
+  $('#formTitle').textContent=ed?'Edit entry':'New inward entry';
+  $('#editBar').hidden=!ed;
+  $('#saveBtn').textContent=ed?'Save changes':'Save entry';
+  $('#clearBtn').textContent=ed?'Cancel':'Clear';
+  if(ed){var r=records.find(function(x){return x.id===editingId});$('#editName').textContent=r?r.batteryNo:''}
+}
+function fillForm(r){
+  TXT.forEach(function(k){$('#'+k).value=r[k]||''});
+  var sel=$('#status');
+  if(r.status&&!Array.prototype.some.call(sel.options,function(o){return o.value===r.status})){var o=document.createElement('option');o.value=o.textContent=r.status;sel.appendChild(o);sel.value=r.status}
+  NUM.forEach(function(k){$('#'+k).value=r[k]==null?'':String(r[k])});
+  $(r.solved==='yes'?'#solvedYes':'#solvedNo').checked=true;
+  var a=r.maxStrV,b=r.minStrV;
+  diffManual=r.diffV!=null&&!(a!=null&&b!=null&&round3(a-b)===r.diffV);
+}
+function startEdit(id){
+  var r=records.find(function(x){return x.id===id});if(!r)return;
+  showErrors([]);editingId=id;fillForm(r);setEditUI();updateHint();showTab('entry');
+}
+function updateHint(){
+  var h=$('#batteryHint'),v=$('#batteryNo').value.trim().toLowerCase();
+  if(!v){h.hidden=true;return}
+  var m=records.filter(function(r){return r.id!==editingId&&(r.batteryNo||'').toLowerCase()===v}).sort(byDateDesc);
+  if(!m.length){h.hidden=true;return}
+  h.textContent='Seen '+m.length+(m.length>1?' times':' time')+' before. Last inward '+fmtDate(m[0].inward)+(m[0].outward?'.':', still in the workshop.');
+  h.hidden=false;
+}
+function toast(msg){
+  var t=$('#toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('on')},2600);
+}
+function saveError(e){
+  toast(e&&e.message==='storage'?'Browser storage is blocked or full. Take a backup.':'Could not save. Try again.');
+}
+
+$('#form').addEventListener('submit',async function(ev){
+  ev.preventDefault();if(saving)return;
+  var r=readForm();
+  if(r.diffV==null&&r.maxStrV!=null&&r.minStrV!=null&&isFinite(r.maxStrV)&&isFinite(r.minStrV))r.diffV=round3(r.maxStrV-r.minStrV);
+  var errs=validate(r);showErrors(errs);
+  if(errs.length){var f=$('#'+errs[0][0]);if(f)f.focus();return}
+  saving=true;$('#saveBtn').disabled=true;
+  var now=Date.now(),ex=editingId?records.find(function(x){return x.id===editingId}):null;
+  var rec=Object.assign({},r,{id:editingId||newId(),createdAt:(ex&&ex.createdAt)||now,updatedAt:now});
+  try{
+    await persist(rec);
+    var wasEdit=!!editingId;
+    toast((wasEdit?'Updated ':'Saved ')+rec.batteryNo);
+    if(teamsReady()&&tset.auto){enqueue(wasEdit?'update':'new',rec);flush(false)}
+    resetForm();
+    if(wasEdit)showTab('records');
+  }catch(e){saveError(e)}
+  finally{saving=false;$('#saveBtn').disabled=false}
+});
+$('#clearBtn').addEventListener('click',function(){
+  if(editingId){resetForm();showTab('records')}else resetForm();
+});
+$('#form').addEventListener('input',function(ev){
+  var el=ev.target;if(el.removeAttribute)el.removeAttribute('aria-invalid');
+  if(el.id==='maxStrV'||el.id==='minStrV')autoDiff();
+  if(el.id==='diffV'){diffManual=el.value.trim()!=='';if(!diffManual)autoDiff()}
+  if(el.id==='batteryNo')updateHint();
+});
+
+/* ---------- records ---------- */
+function visible(){
+  var s=q.trim().toLowerCase();
+  return records.filter(function(r){
+    if(filter==='open'&&r.outward)return false;
+    if(filter==='out'&&!r.outward)return false;
+    if(filter==='unsolved'&&r.solved!=='no')return false;
+    if(s){var hay=[r.batteryNo,r.bmsNo,r.desc,r.status].join(' ').toLowerCase();if(hay.indexOf(s)<0)return false}
+    return true;
+  }).sort(byDateDesc);
+}
+function card(r){
+  var tone=TONE[r.status]||'';
+  var pills='<span class="pill '+tone+'">'+esc(r.status||'No status')+'</span>'+
+    (r.solved==='yes'?'<span class="pill ok">Solved</span>':'<span class="pill bad">Not solved</span>');
+  var sNo=function(n){return n!=null?' (S'+esc(n)+')':''};
+  var facts='<div><em>Max string</em> '+val(r.maxStrV,' V')+sNo(r.maxStrNo)+'</div>'+
+            '<div><em>Min string</em> '+val(r.minStrV,' V')+sNo(r.minStrNo)+'</div>'+
+            '<div><em>Temp max / min</em> '+val(r.maxT)+' / '+val(r.minT)+' °C</div>';
+  var actions=pendingDelete===r.id
+    ?'<span class="ask">Delete this entry?</span><button class="btn ghost small" type="button" data-act="cancel" data-id="'+esc(r.id)+'">Keep</button><button class="btn ghost small danger" type="button" data-act="confirm" data-id="'+esc(r.id)+'">Delete</button>'
+    :'<button class="btn ghost small" type="button" data-act="send" data-id="'+esc(r.id)+'">Send to Teams</button><button class="btn ghost small" type="button" data-act="edit" data-id="'+esc(r.id)+'">Edit</button><button class="btn ghost small" type="button" data-act="del" data-id="'+esc(r.id)+'">Delete</button>';
+  return '<article class="card">'+
+    '<div class="c-top"><div><div class="bno">'+esc(r.batteryNo)+'</div>'+(r.bmsNo?'<div class="bms">BMS '+esc(r.bmsNo)+'</div>':'')+'</div><div class="pills">'+pills+'</div></div>'+
+    '<div class="stats">'+
+      '<div class="stat"><span>Pack V</span><b>'+val(r.packV)+'</b></div>'+
+      '<div class="stat"><span>SOC %</span><b>'+val(r.soc)+'</b></div>'+
+      '<div class="stat"><span>Cap Ah</span><b>'+val(r.capAh)+'</b></div>'+
+      '<div class="stat"><span>Diff V</span><b>'+val(r.diffV)+'</b></div>'+
+    '</div>'+
+    '<div class="facts">'+facts+'</div>'+
+    '<div class="dates"><span>In <b>'+fmtDate(r.inward)+'</b></span><span>Out <b>'+fmtDate(r.outward)+'</b></span></div>'+
+    (r.desc?'<p class="desc">'+esc(r.desc)+'</p>':'')+
+    '<div class="c-actions">'+actions+'</div></article>';
+}
+function renderList(){
+  var list=$('#list'),rows=visible();
+  var open=records.filter(function(r){return !r.outward}).length;
+  $('#summary').textContent=!loaded?'':(records.length?rows.length+' of '+records.length+' entries · '+open+' in workshop':'');
+  if(!loaded){list.innerHTML='<div class="empty"><p>Loading records…</p></div>';return}
+  if(!records.length){
+    list.innerHTML='<div class="empty"><h3>No batteries logged yet</h3><p>Each saved entry appears here, newest inward date first. You can search it, edit it later and export everything as CSV for Excel.</p><button class="btn primary small" type="button" data-act="new">Add first entry</button></div>';
+    return;
+  }
+  if(!rows.length){list.innerHTML='<div class="empty"><h3>No matches</h3><p>Nothing fits this search and filter. Clear the search or pick All.</p></div>';return}
+  list.innerHTML=rows.map(card).join('');
+}
+function renderChip(){
+  var c=$('#chip');c.setAttribute('data-mode',mode);
+  $('#chipText').textContent='Saved on this phone';
+  c.title='Entries are stored in this browser on this device. Use Backup to keep a copy.';
+}
+function render(){
+  $('#count').textContent=records.length;
+  renderChip();renderList();updateHint();
+  $('#exportBtn').disabled=!records.length;$('#backupBtn').disabled=!records.length;
+}
+$('#list').addEventListener('click',async function(ev){
+  var b=ev.target.closest('button[data-act]');if(!b)return;
+  var id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
+  if(act==='edit')startEdit(id);
+  else if(act==='new')showTab('entry');
+  else if(act==='send')sendManual(id);
+  else if(act==='del'){pendingDelete=id;renderList()}
+  else if(act==='cancel'){pendingDelete=null;renderList()}
+  else if(act==='confirm'){
+    try{await removeRec(id);toast('Entry deleted')}catch(e){saveError(e)}
+    pendingDelete=null;renderList();
+  }
+});
+$('#filters').addEventListener('click',function(ev){
+  var b=ev.target.closest('.fbtn');if(!b)return;
+  filter=b.getAttribute('data-f');
+  document.querySelectorAll('.fbtn').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+  renderList();
+});
+$('#q').addEventListener('input',function(){q=this.value;renderList()});
+
+/* ---------- export ---------- */
+function cell(v,text){
+  if(v==null)return '';var s=String(v);
+  if(text&&/^[=+\-@\t\r]/.test(s))s="'"+s;
+  if(/[",\n\r]/.test(s))s='"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function saveFile(name,text,type){
+  var blob=new Blob([text],{type:type}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove()},1500);
+}
+$('#exportBtn').addEventListener('click',function(){
+  if(!records.length)return;
+  var head=['Inward Date','Battery No','BMS No','Pack Voltage (V)','Max String Voltage (V)','Max String No','Min String Voltage (V)','Min String No','Max Temp (C)','Min Temp (C)','Diff Voltage (V)','Fuel Gauge O/P SOC (%)','Battery Capacity (Ah)','Problem Solved','Description','Status','Outward Date'];
+  var rows=records.slice().sort(function(a,b){return (a.inward||'').localeCompare(b.inward||'')||(a.createdAt||0)-(b.createdAt||0)});
+  var lines=[head.join(',')].concat(rows.map(function(r){
+    return [cell(r.inward),cell(r.batteryNo,1),cell(r.bmsNo,1),cell(r.packV),cell(r.maxStrV),cell(r.maxStrNo),cell(r.minStrV),cell(r.minStrNo),cell(r.maxT),cell(r.minT),cell(r.diffV),cell(r.soc),cell(r.capAh),r.solved==='yes'?'Yes':'No',cell(r.desc,1),cell(r.status,1),cell(r.outward)].join(',');
+  }));
+  saveFile('battery-service-log-'+today()+'.csv','\ufeff'+lines.join('\r\n'),'text/csv;charset=utf-8');
+  toast('CSV exported');
+});
+$('#backupBtn').addEventListener('click',function(){
+  if(!records.length)return;
+  saveFile('battery-service-backup-'+today()+'.json',JSON.stringify({app:'battery-service-log',version:1,exportedAt:new Date().toISOString(),records:records}),'application/json');
+  toast('Backup saved');
+});
+$('#restoreBtn').addEventListener('click',function(){$('#restoreFile').click()});
+$('#restoreFile').addEventListener('change',function(){
+  var f=this.files&&this.files[0],input=this;if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    try{
+      var data=JSON.parse(fr.result),list=Array.isArray(data)?data:data.records;
+      if(!Array.isArray(list))throw new Error('format');
+      var byId={};records.forEach(function(r){byId[r.id]=r});
+      var n=0;
+      list.forEach(function(r){
+        if(r&&typeof r==='object'&&typeof r.batteryNo==='string'&&typeof r.inward==='string'){
+          if(!r.id)r.id=newId();
+          byId[r.id]=r;n++;
+        }
+      });
+      if(!n)throw new Error('format');
+      records=Object.keys(byId).map(function(k){return byId[k]});
+      var ok=lsSave();render();
+      toast(ok?'Restored '+n+' entries':'Restored, but browser storage is full');
+    }catch(e){toast('That file is not a Battery Service Log backup.')}
+    input.value='';
+  };
+  fr.onerror=function(){toast('Could not read that file.');input.value=''};
+  fr.readAsText(f);
+});
+
+/* ---------- Teams posting (through your relay) ---------- */
+var TSET='batteryServiceLog.teams.v1', TOUT='batteryServiceLog.outbox.v1';
+var tset={url:'',key:'',auto:true}, outbox=[], flushing=false;
+function loadTeams(){
+  try{var s=JSON.parse(localStorage.getItem(TSET)||'null');if(s&&typeof s==='object')tset=Object.assign(tset,s)}catch(e){}
+  try{var o=JSON.parse(localStorage.getItem(TOUT)||'[]');outbox=Array.isArray(o)?o:[]}catch(e){outbox=[]}
+}
+function saveTset(){try{localStorage.setItem(TSET,JSON.stringify(tset))}catch(e){}}
+function saveOutbox(){try{localStorage.setItem(TOUT,JSON.stringify(outbox))}catch(e){}}
+function teamsReady(){return /^https:\/\//.test(tset.url||'')&&!!tset.key}
+function enqueue(event,rec){
+  outbox.push({event:event,record:JSON.parse(JSON.stringify(rec||null)),at:Date.now()});
+  saveOutbox();renderTeams();
+}
+async function postItem(item,cfg){
+  var ctl=new AbortController(),timer=setTimeout(function(){ctl.abort()},15000);
+  try{
+    var res=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'application/json','X-App-Key':cfg.key},body:JSON.stringify({event:item.event,record:item.record}),signal:ctl.signal});
+    return {ok:res.ok,status:res.status};
+  }catch(e){return {ok:false,status:0}}
+  finally{clearTimeout(timer)}
+}
+function failText(st){
+  return st===0?'No connection. It will be sent when you are online.'
+    :st===401?'The relay rejected the app key. Check Teams settings.'
+    :st===403?'The relay does not accept this website. Check its allowed address.'
+    :st===502?'The relay could not post to Teams. Check the Teams workflow.'
+    :'Teams send failed ('+st+').';
+}
+async function flush(manual){
+  if(flushing||!outbox.length||!teamsReady())return;
+  flushing=true;var sent=0,fail=null;
+  try{
+    while(outbox.length){
+      var r=await postItem(outbox[0],tset);
+      if(r.ok){outbox.shift();sent++;saveOutbox()}else{fail=r;break}
+    }
+  }finally{flushing=false}
+  renderTeams();
+  if(fail){if(manual||fail.status!==0)toast(failText(fail.status))}
+  else if(sent)toast('Posted to Teams'+(sent>1?' ('+sent+' entries)':''));
+}
+function sendManual(id){
+  var r=records.find(function(x){return x.id===id});if(!r)return;
+  if(!teamsReady()){
+    var box=$('#teamsBox');box.open=true;box.scrollIntoView({block:'center'});
+    toast('Add your relay address and key first.');return;
+  }
+  enqueue('share',r);flush(true);
+}
+function renderTeams(){
+  var n=outbox.length;
+  $('#tStatus').textContent=n?n+(n===1?' entry is':' entries are')+' waiting to be sent to Teams.':(teamsReady()?(tset.auto?'Posting is on. New entries go to Teams when you save.':'Posting is off. Use Send to Teams on an entry.'):'Not set up yet.');
+  $('#tFlush').hidden=!n||!teamsReady();
+  $('#tClear').hidden=!n;
+}
+function initTeams(){
+  loadTeams();
+  $('#tUrl').value=tset.url||'';$('#tKey').value=tset.key||'';$('#tAuto').checked=tset.auto!==false;
+  renderTeams();
+  window.addEventListener('online',function(){flush(false)});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')flush(false)});
+  flush(false);
+}
+$('#tSave').addEventListener('click',function(){
+  var url=$('#tUrl').value.trim(),key=$('#tKey').value.trim();
+  if(url&&!/^https:\/\//.test(url)){toast('The relay address must start with https://');return}
+  tset={url:url,key:key,auto:$('#tAuto').checked};saveTset();renderTeams();
+  toast('Teams settings saved');flush(false);
+});
+$('#tTest').addEventListener('click',async function(){
+  var cfg={url:$('#tUrl').value.trim(),key:$('#tKey').value.trim()};
+  if(!/^https:\/\//.test(cfg.url)||!cfg.key){toast('Enter the relay address and app key first.');return}
+  var btn=this;btn.disabled=true;
+  var r=await postItem({event:'test',record:null},cfg);
+  btn.disabled=false;
+  toast(r.ok?'Test sent. Check your Teams group.':failText(r.status));
+});
+$('#tFlush').addEventListener('click',function(){flush(true)});
+$('#tClear').addEventListener('click',function(){outbox=[];saveOutbox();renderTeams();toast('Waiting entries cleared')});
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  var entry=name==='entry';
+  $('#viewEntry').hidden=!entry;$('#viewRecords').hidden=entry;
+  if(entry)$('#tabEntry').setAttribute('aria-current','page');else $('#tabEntry').removeAttribute('aria-current');
+  if(!entry)$('#tabRecords').setAttribute('aria-current','page');else $('#tabRecords').removeAttribute('aria-current');
+  window.scrollTo(0,0);
+}
+$('#tabEntry').addEventListener('click',function(){showTab('entry')});
+$('#tabRecords').addEventListener('click',function(){showTab('records')});
+
+/* ---------- start ---------- */
+$('#status').innerHTML=STATUSES.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>'}).join('');
+$('#inward').value=today();
+render();
+boot();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+})();
+</script>
+</body>
+</html>
