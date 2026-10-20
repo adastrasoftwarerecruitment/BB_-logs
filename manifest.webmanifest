@@ -1,0 +1,14 @@
+{
+  "name": "Battery Service Log",
+  "short_name": "Battery Log",
+  "description": "Daily log of battery pack service records",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E8EDF0",
+  "theme_color": "#F5B800",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
