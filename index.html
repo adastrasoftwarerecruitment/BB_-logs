@@ -145,7 +145,6 @@ function fld(s,k,l,t,v,ro){
   if(k==='description'||k==='solution')return `<label class="wide">${L}<textarea data-k="${k}" rows="7" ${dis}>${val}</textarea></label>`;
   if(k==='solved')return `<label class="wide">${L}<select data-k="solved" ${dis}><option value="">Select</option><option value="yes"${v==='yes'?' selected':''}>Yes</option><option value="no"${v==='no'?' selected':''}>No</option></select></label>`;
   if(k==='status')return `<label class="wide">${L}<input data-k="status" list="stl" value="${val}" ${dis} autocomplete="off"><datalist id="stl">${STATUSES.map(x=>`<option value="${x}">`).join('')}</datalist></label>`;
-  if(k==='diff_voltage')return `<label>${L} <small>auto</small><input data-k="diff_voltage" value="${val}" readonly tabindex="-1"></label>`;
   if(k==='ip67_psi')return `<label class="wide">${L} <small>20 to 40</small><input data-k="ip67_psi" type="number" inputmode="decimal" step="any" min="20" max="40" value="${val}" ${dis}><span class="hint" id="ipH"></span></label>`;
   const ty=t==='d'?'date':t==='t'?'text':'number';
   return `<label>${L}<input data-k="${k}" type="${ty}" ${ty==='number'?`inputmode="decimal" step="${t==='i'?1:'any'}"`:''} value="${val}" ${dis}></label>`;
@@ -175,8 +174,6 @@ function draw(r,stage){
   if(F&&!ro){
     const g=k=>F.querySelector(`[data-k="${k}"]`);
     const upd=()=>{
-      const a=g('max_string_voltage'),b=g('min_string_voltage'),d=g('diff_voltage');
-      if(d)d.value=(a.value!==''&&b.value!==''&&isFinite(a.value-b.value))?Math.round((a.value-b.value)*1000)/1000:'';
       const ip=g('ip67_psi');if(ip){const v=ip.value,bad=v!==''&&(!(+v>=20)||+v>40);$('#ipH').textContent=bad?'IP67 test must be between 20 and 40 psi':'';}
     };
     F.addEventListener('input',upd);upd();
