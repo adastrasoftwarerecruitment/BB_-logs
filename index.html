@@ -82,6 +82,36 @@ details{margin-top:16px;font-size:14px}summary{color:var(--muted);cursor:pointer
 .mini{margin-top:14px;display:flex;gap:8px;justify-content:center}
 .mini .b{flex:none;padding:10px 18px}
 @media(prefers-reduced-motion:no-preference){#toast{animation:up .18s ease-out}@keyframes up{from{transform:translateY(8px);opacity:0}}}
+
+a.b{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;max-width:720px;margin:0 auto;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:6}
+.nav a,.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11.5px;font-weight:600;text-decoration:none;min-height:54px;border-radius:10px}
+.nav .on{color:var(--ink)}.nav .nv{color:var(--acc)}
+.nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cl{display:block;color:inherit;text-decoration:none}
+.ca{margin-top:10px;display:flex}.ca .b{flex:none}
+.fchips{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.fchips button{white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;min-height:38px}
+.fchips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sk{height:92px;border-radius:var(--r);background:linear-gradient(90deg,var(--line),color-mix(in srgb,var(--line) 40%,var(--surface)),var(--line));background-size:200% 100%;margin-bottom:10px;border:0}
+@media(prefers-reduced-motion:no-preference){.sk{animation:sh 1.2s infinite linear}@keyframes sh{to{background-position:-200% 0}}}
+.steps{gap:4px}
+.steps a{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px 8px;min-width:0}
+.steps a.on{border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--ink)}
+.n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;border:2px solid var(--line);color:var(--muted);background:transparent}
+.n.submitted{background:var(--ok);border-color:var(--ok);color:#fff}
+.n.draft{border-color:var(--warn);color:var(--warn)}
+.n.log{border-color:var(--acc);color:var(--acc)}
+.grp{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px;padding-top:14px;border-top:1px solid var(--line)}
+.grp:first-child{border:0;margin:0;padding:0}
+.was{display:block;font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;margin-top:4px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:720px;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto}
+.sheet h2{margin:0 0 2px;font-size:18px}
+.rv{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rv span{color:var(--muted)}.rv b{text-align:right;white-space:pre-wrap;word-break:break-word}
+.bar2{display:flex;gap:10px;margin-top:16px}
+.empty-a{display:inline-flex;margin-top:12px}
 </style>
 </head>
 <body>
@@ -112,34 +142,54 @@ async function api(path,o={}){
   return j;
 }
 let tt;function toast(m,bad,ms){const t=$('#toast');t.textContent=m;t.className=bad?'bad':'';t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',ms||3200);}
-const paint=h=>{app.innerHTML=h;window.scrollTo(0,0);};
+let dirty=false;
+const paint=h=>{dirty=false;app.innerHTML=h;window.scrollTo(0,0);};
 const head=(t,back)=>`<header class="top">${back?`<a class="back" href="${back}" aria-label="Back">&#8249;</a>`:''}<div class="t"><small>${BRAND} Battery Service</small><h1>${t}</h1></div><span class="role ${cfg.role}">${cfg.role==='editor'?'Editor':'View only'}</span><a class="gear" href="#/settings" aria-label="Settings">&#9881;</a></header>`;
 const pips=r=>`<span class="pips" aria-hidden="true">${ST.map(s=>`<i class="${r.stages[s].state}"></i>`).join('')}</span>`;
 const isEd=()=>cfg.role==='editor';
-const fail=e=>{if(e.status===401){toast('The app key was not accepted. Check Settings.',true,5000);location.hash='/settings';}else paint(head('Error','#/')+`<div class="note">${esc(e.message)}</div>`);};
+const fail=e=>{if(e.status===401){toast('The app key was not accepted. Check Settings.',true,5000);location.hash='/settings';}else{paint(head('Something went wrong','#/')+`<div class="note">${esc(e.message)}</div><button class="b p" id="retry" style="width:100%">Retry</button>`);$('#retry').onclick=()=>route();}};
+const ICON={home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',plus:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',dl:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>',set:'<svg viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></svg>'};
+const nav=cur=>`<nav class="nav" aria-label="Main"><a href="#/" class="${cur==='home'?'on':''}">${ICON.home}Home</a>${isEd()?`<a href="#/new" class="nv">${ICON.plus}New</a>`:''}<button id="navx">${ICON.dl}Export</button><a href="#/settings" class="${cur==='set'?'on':''}">${ICON.set}Settings</a></nav>`;
+const skel=n=>Array.from({length:n},()=>'<div class="sk"></div>').join('');
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;if(dirty&&!confirm('You have unsaved changes. Leave without saving?'))e.preventDefault();else dirty=false;},true);
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 const inWin=r=>r.stages.inward.state==='submitted'&&r.stages.outward.state!=='submitted';
 
 /* ---------- Home ---------- */
-let tab='open',q='';
+let tab='open',q='',flt='all';
 async function home(){
-  paint(head('Battery Service Log')+'<p class="blank">Loading...</p>');
+  paint(head('Battery Service Log')+`<div class="stats">${'<div class="stat sk" style="height:66px;margin:0"></div>'.repeat(3)}</div>${skel(3)}`+nav('home'));
+  $('#navx').onclick=exportXlsx;
   let list;try{list=await api('/api/services?limit=1000');}catch(e){return fail(e);}
-  const t=today(),done=r=>r.current_stage==='completed';
+  const t=today(),done=r=>r.current_stage==='completed',hasDraft=r=>ST.some(s=>r.stages[s].state==='draft'),miss=r=>inWin(r)&&r.last_update!==t;
+  const card=r=>{
+    const cur=r.current_stage,dr=cur!=='completed'&&r.stages[cur].state==='draft',o=r.stages.outward.data,w=inWin(r);
+    return `<div class="card ${done(r)?'done':''}"><a class="cl" href="#/r/${r.id}"><div class="row"><b class="bn">${esc(r.battery_no)}</b>${pips(r)}</div><div class="sub"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div><div class="meta">${done(r)?`<span class="chip ok">Completed</span>${o.date?`<span>Out ${fmt(o.date)}</span>`:''}${o.status?`<span>${esc(o.status)}</span>`:''}`:`<span class="chip">Next: ${LBL[cur]}</span>${dr&&isEd()?'<span class="chip draft">Draft saved</span>':''}${w?(r.last_update===t?'<span class="chip ok">Updated today</span>':'<span class="chip warn">No update today</span>'):''}${w&&r.last_update?`<span>Last update ${fmt(r.last_update)}</span>`:''}`}</div></a>${isEd()&&miss(r)?`<div class="ca"><a class="b s p" href="#/r/${r.id}/updates">Add today's update</a></div>`:''}</div>`;};
   const drawList=()=>{
     const f=list.filter(r=>!q||(r.battery_no+' '+r.bms_no).toUpperCase().includes(q.toUpperCase()));
-    const open=f.filter(r=>!done(r)),comp=f.filter(done),shown=tab==='open'?open:comp;
+    const open=f.filter(r=>!done(r)),comp=f.filter(done);
+    let shown=tab==='open'?open:comp;
+    if(tab==='open'&&flt==='drafts')shown=open.filter(hasDraft);
+    if(tab==='open'&&flt==='missing')shown=open.filter(miss);
     $('#tabs').innerHTML=`<button class="${tab==='open'?'on':''}" data-t="open">In progress (${open.length})</button><button class="${tab==='done'?'on':''}" data-t="done">Completed (${comp.length})</button>`;
-    $('#list').innerHTML=shown.length?shown.map(r=>{
-      const cur=r.current_stage,dr=cur!=='completed'&&r.stages[cur].state==='draft',o=r.stages.outward.data,w=inWin(r);
-      return `<a class="card ${done(r)?'done':''}" href="#/r/${r.id}"><div class="row"><b class="bn">${esc(r.battery_no)}</b>${pips(r)}</div><div class="sub"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div><div class="meta">${done(r)?`<span class="chip ok">Completed</span>${o.date?`<span>Out ${fmt(o.date)}</span>`:''}${o.status?`<span>${esc(o.status)}</span>`:''}`:`<span class="chip">Next: ${LBL[cur]}</span>${dr&&isEd()?'<span class="chip draft">Draft saved</span>':''}${w?(r.last_update===t?`<span class="chip ok">Updated today</span>`:`<span class="chip warn">No update today</span>`):''}${w&&r.last_update?`<span>Last update ${fmt(r.last_update)}</span>`:''}`}</div></a>`;}).join('')
-      :`<p class="blank">${q?'No battery matches that search.':tab==='open'?(isEd()?'Nothing in progress. Tap New battery to start.':'Nothing in progress.'):'No completed services yet.'}</p>`;
+    $('#chips').innerHTML=tab==='open'?`<button class="${flt==='all'?'on':''}" data-f="all">All (${open.length})</button>${isEd()?`<button class="${flt==='drafts'?'on':''}" data-f="drafts">Drafts (${open.filter(hasDraft).length})</button>`:''}<button class="${flt==='missing'?'on':''}" data-f="missing">No update today (${open.filter(miss).length})</button>`:'';
+    let msg='';
+    if(!shown.length){
+      if(q)msg='No battery matches that search.';
+      else if(tab==='done')msg='No completed services yet.';
+      else if(flt==='drafts')msg='No drafts. Everything you started has been submitted.';
+      else if(flt==='missing')msg='Every in-progress pack has an update today.';
+      else msg=isEd()?'Nothing in progress yet.':'Nothing in progress.';
+    }
+    $('#list').innerHTML=shown.length?shown.map(card).join(''):`<p class="blank">${msg}${!q&&tab==='open'&&flt==='all'&&isEd()?'<br><a class="b p s empty-a" href="#/new">Start a new battery</a>':''}</p>`;
   };
-  const openAll=list.filter(r=>!done(r)),missing=openAll.filter(r=>inWin(r)&&r.last_update!==t).length;
-  paint(head('Battery Service Log')+`<div class="stats"><div class="stat"><b>${openAll.length}</b><span>In progress</span></div><div class="stat ${missing?'warn':''}"><b>${missing}</b><span>No update today</span></div><div class="stat"><b>${list.length-openAll.length}</b><span>Completed</span></div></div><input id="q" type="search" placeholder="Search battery or BMS number" value="${esc(q)}" aria-label="Search"><div class="tabs" id="tabs"></div><div id="list"></div><div class="mini"><button class="b" id="xl">Download Excel</button></div>${isEd()?'<a class="fab" href="#/new">+ New battery</a>':''}`);
+  const openAll=list.filter(r=>!done(r)),missing=openAll.filter(miss).length;
+  paint(head('Battery Service Log')+`<div class="stats"><div class="stat"><b>${openAll.length}</b><span>In progress</span></div><div class="stat ${missing?'warn':''}"><b>${missing}</b><span>No update today</span></div><div class="stat"><b>${list.length-openAll.length}</b><span>Completed</span></div></div><input id="q" type="search" placeholder="Search battery or BMS number" value="${esc(q)}" aria-label="Search"><div class="tabs" id="tabs"></div><div class="fchips" id="chips"></div><div id="list"></div>`+nav('home'));
+  $('#navx').onclick=exportXlsx;
   drawList();
   $('#q').oninput=e=>{q=e.target.value.trim();drawList();};
   $('#tabs').onclick=e=>{const x=e.target.dataset.t;if(x){tab=x;drawList();}};
-  $('#xl').onclick=exportXlsx;
+  $('#chips').onclick=e=>{const x=e.target.dataset.f;if(x){flt=x;drawList();}};
 }
 
 /* ---------- New ---------- */
@@ -163,35 +213,63 @@ function newRec(){
 }
 
 /* ---------- Record ---------- */
-function fld(s,k,l,t,v,ro){
+const GROUPS=[['Date',['date']],['Voltage',['pack_voltage','max_string_voltage','max_string_no','min_string_voltage','min_string_no','diff_voltage']],['Temperature',['max_temp','min_temp']],['Charge and capacity',['fuel_gauge','soc','capacity_ah']],['IP67 test',['ip67_psi']]];
+function fld(s,k,l,t,v,ro,was){
   const L=lab(s,k,l),dis=ro?'disabled':'',val=v==null?'':esc(v);
+  const W=was!=null&&was!==''?`<span class="was">Inward: ${esc(was)}</span>`:'';
   if(k==='description'||k==='solution')return `<label class="wide">${L}<textarea data-k="${k}" rows="7" ${dis}>${val}</textarea></label>`;
   if(k==='solved')return `<label class="wide">${L}<select data-k="solved" ${dis}><option value="">Select</option><option value="yes"${v==='yes'?' selected':''}>Yes</option><option value="no"${v==='no'?' selected':''}>No</option></select></label>`;
   if(k==='status')return `<label class="wide">${L}<input data-k="status" list="stl" value="${val}" ${dis} autocomplete="off"><datalist id="stl">${STATUSES.map(x=>`<option value="${x}">`).join('')}</datalist></label>`;
-  if(k==='ip67_psi')return `<label class="wide">${L} <small>20 to 40</small><input data-k="ip67_psi" type="number" inputmode="decimal" step="any" min="20" max="40" value="${val}" ${dis}><span class="hint" id="ipH"></span></label>`;
+  if(k==='ip67_psi')return `<label class="wide">${L} <small>20 to 40</small><input data-k="ip67_psi" type="number" inputmode="decimal" enterkeyhint="next" step="any" min="20" max="40" value="${val}" ${dis}><span class="hint" id="ipH"></span>${W}</label>`;
   const ty=t==='d'?'date':t==='t'?'text':'number';
-  return `<label>${L}<input data-k="${k}" type="${ty}" ${ty==='number'?`inputmode="decimal" step="${t==='i'?1:'any'}"`:''} value="${val}" ${dis}></label>`;
+  return `<label>${L}<input data-k="${k}" type="${ty}" ${ty==='number'?`inputmode="decimal" step="${t==='i'?1:'any'}"`:''} enterkeyhint="next" value="${val}" ${dis}>${W}</label>`;
+}
+function formHtml(r,stage,data,ro){
+  const fl=Object.fromEntries(FIELDS[stage].map(f=>[f[0],f])),inw=r.stages.inward.data;
+  const one=k=>fld(stage,k,fl[k][1],fl[k][2],data[k],ro,stage==='outward'&&k!=='date'?inw[k]:null);
+  if(stage==='inward'||stage==='outward'){
+    const g=stage==='outward'?[...GROUPS,['Outcome',['status']]]:GROUPS;
+    return g.map(([n,ks])=>`<div class="grp">${n}</div>`+ks.map(one).join('')).join('');
+  }
+  return FIELDS[stage].map(f=>one(f[0])).join('');
 }
 async function record(id,sp){
-  paint(head('Loading...','#/'));
+  paint(head('Loading','#/')+skel(1)+'<div class="sk" style="height:300px"></div>');
   let r;try{r=await api('/api/services/'+id);}catch(e){return fail(e);}
   if(sp==='updates')return draw(r,'updates');
   draw(r,ST.includes(sp)?sp:(r.current_stage==='completed'?'outward':r.current_stage));
 }
 function frame(r,stage,inner,bar,extra){
-  const id=r.id;
-  return head(esc(r.battery_no),'#/')+`<div class="sub" style="margin:0 0 12px"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div>
-  <nav class="steps">${ST.slice(0,3).map(s=>`<a href="#/r/${id}/${s}" class="${s===stage?'on':''}"><i class="${r.stages[s].state}"></i>${LBL[s]}</a>`).join('')}<a href="#/r/${id}/updates" class="${stage==='updates'?'on':''}"><i class="log"></i>Daily log${(r.updates||[]).length?' ('+r.updates.length+')':''}</a><a href="#/r/${id}/outward" class="${stage==='outward'?'on':''}"><i class="${r.stages.outward.state}"></i>Outward</a></nav>${inner}${extra||''}${bar||''}`;
+  const id=r.id,cur=r.current_stage,o=r.stages.outward.data,dr=cur!=='completed'&&r.stages[cur].state==='draft';
+  const todayHas=(r.updates||[]).some(u=>u.update_date===today());
+  const chips=cur==='completed'?`<span class="chip ok">Completed</span>${o.status?`<span class="chip">${esc(o.status)}</span>`:''}`:`<span class="chip">Next: ${LBL[cur]}</span>${dr&&isEd()?'<span class="chip draft">Draft saved</span>':''}${inWin(r)?(todayHas?'<span class="chip ok">Updated today</span>':'<span class="chip warn">No update today</span>'):''}`;
+  const step=(s,i)=>`<a href="#/r/${id}/${s}" class="${s===stage?'on':''}"><span class="n ${r.stages[s].state}">${r.stages[s].state==='submitted'?'&#10003;':i}</span>${LBL[s]}</a>`;
+  return head(esc(r.battery_no),'#/')+`<div class="sub" style="margin:0 0 6px"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div><div class="meta" style="margin:0 0 12px">${chips}</div>
+  <nav class="steps" aria-label="Stages">${step('inward',1)}${step('problem',2)}${step('solution',3)}<a href="#/r/${id}/updates" class="${stage==='updates'?'on':''}"><span class="n log">${(r.updates||[]).length||'+'}</span>Daily log</a>${step('outward',4)}</nav>${inner}${extra||''}${bar||''}`;
 }
 function details(r){
   return isEd()?`<details><summary>Battery details</summary><div class="grid" style="margin-top:10px"><label>Battery number<input id="mb" value="${esc(r.battery_no)}"></label><label>BMS number<input id="mm" value="${esc(r.bms_no)}"></label></div><div class="mini"><button class="b" id="msave">Save details</button><button class="b d" id="del">Delete record</button></div></details>`:'';
 }
 function wireDetails(r,back){
-  if($('#msave'))$('#msave').onclick=async()=>{try{const x=await api(`/api/services/${r.id}/meta`,{method:'PUT',body:{battery_no:$('#mb').value,bms_no:$('#mm').value}});toast('Details saved');draw(x,back);}catch(e){toast(e.message,true);}};
+  if($('#msave'))$('#msave').onclick=async()=>{try{const x=await api(`/api/services/${r.id}/meta`,{method:'PUT',body:{battery_no:$('#mb').value,bms_no:$('#mm').value}});toast('Details saved');x.updates=r.updates;draw(x,back);}catch(e){toast(e.message,true);}};
   if($('#del'))$('#del').onclick=async()=>{
     if(!confirm(`Delete ${r.battery_no} (${r.ref}) with all its stages and daily updates? This cannot be undone.`))return;
-    try{await api('/api/services/'+r.id,{method:'DELETE'});toast('Record deleted');location.hash='/';}catch(e){toast(e.message,true);}
+    try{await api('/api/services/'+r.id,{method:'DELETE'});dirty=false;toast('Record deleted');location.hash='/';}catch(e){toast(e.message,true);}
   };
+}
+function review(stage,r,data){
+  return new Promise(res=>{
+    const rows=FIELDS[stage].map(([k,l])=>[lab(stage,k,l),data[k]]);
+    const filled=rows.filter(x=>x[1]!==undefined&&String(x[1]).trim()!=='');
+    const blank=rows.length-filled.length;
+    const show=(l,v)=>/date$/i.test(l)||l==='Date'?fmt(v):l==='Problem solved'?(v==='yes'?'Yes':'No'):v;
+    const el=document.createElement('div');el.className='sheet-bg';
+    el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Review before submitting"><h2>Review ${LBL[stage]} stage</h2><p class="sub" style="margin:2px 0 8px"><span>${esc(r.battery_no)}</span>${blank?`<span>${blank} box${blank>1?'es':''} left blank</span>`:''}</p>${filled.map(([l,v])=>`<div class="rv"><span>${esc(l)}</span><b>${esc(show(l,v))}</b></div>`).join('')}<div class="bar2"><button class="b" id="rvc">Back to edit</button><button class="b p" id="rvs">Submit to Teams</button></div></div>`;
+    const end=v=>{el.remove();res(v);};
+    el.addEventListener('click',e=>{if(e.target===el)end(false);});
+    document.body.appendChild(el);
+    $('#rvc').onclick=()=>end(false);$('#rvs').onclick=()=>end(true);$('#rvs').focus();
+  });
 }
 function draw(r,stage){
   if(stage==='updates')return drawUpdates(r);
@@ -201,22 +279,26 @@ function draw(r,stage){
   const prior=ST.slice(0,ST.indexOf(stage)).filter(s=>r.stages[s].state!=='submitted');
   let body;
   if(!ed&&S.state!=='submitted')body='<p class="blank">This stage has not been recorded yet.</p>';
-  else body=`<div class="panel"><div class="grid" id="f">${FIELDS[stage].map(([k,l,t])=>fld(stage,k,l,t,data[k],ro)).join('')}</div></div>`;
-  const bar=!ed?'':S.state==='submitted'?`<div class="bar"><button class="b" id="reopen">Reopen to edit</button></div>`:`<div class="bar"><button class="b" id="draft">Save draft</button><button class="b p" id="submit"${prior.length?' disabled':''}>Submit to Teams</button></div>`;
+  else body=`<div class="panel"><div class="grid" id="f">${formHtml(r,stage,data,ro)}</div></div>`;
+  const bar=!ed?'':S.state==='submitted'?`<div class="bar"><button class="b" id="reopen">Reopen to edit</button></div>`:`<div class="bar"><button class="b" id="draft">Save draft</button><button class="b p" id="submit"${prior.length?' disabled':''}>Review and submit</button></div>`;
   const notes=`${ed&&S.state==='draft'?'<div class="note">Draft saved. Nothing has been posted to Teams yet.</div>':''}${ed&&S.state==='submitted'?'<div class="note ok">Submitted and posted to Teams.</div>':''}${ed&&prior.length&&S.state!=='submitted'?`<div class="note">You can save a draft now. Submit the ${prior.map(s=>LBL[s]).join(', ')} stage first to submit this one.</div>`:''}`;
   paint(frame(r,stage,notes+body,bar,details(r)));
   const F=$('#f');
   if(F&&!ro){
     const upd=()=>{const ip=F.querySelector('[data-k=ip67_psi]');if(ip){const v=ip.value,bad=v!==''&&(!(+v>=20)||+v>40);$('#ipH').textContent=bad?'IP67 test must be between 20 and 40 psi':'';}};
-    F.addEventListener('input',upd);upd();
+    F.addEventListener('input',()=>{dirty=true;upd();});upd();
+    F.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();const els=[...F.querySelectorAll('input,select,textarea')].filter(x=>!x.disabled&&!x.readOnly);const i=els.indexOf(e.target);if(els[i+1])els[i+1].focus();else e.target.blur();}});
   }
   const collect=()=>{const o={};if(F)F.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);return o;};
   const busy=b=>document.querySelectorAll('.bar button').forEach(x=>x.disabled=b);
+  const keep=x=>{x.updates=r.updates;return x;};
   const save=async submit=>{
-    if(submit&&!confirm(`Submit ${LBL[stage]} for ${r.battery_no} and post to Teams?`))return;
+    const data2=collect();
+    if(submit){const ip=data2.ip67_psi;if(ip&&(!(+ip>=20)||+ip>40))return toast('IP67 test must be between 20 and 40 psi',true,4500);if(!await review(stage,r,data2))return;}
     busy(true);
     try{
-      const res=await api(`/api/services/${id}/${stage}`,{method:'PUT',body:{data:collect(),submit}});
+      const res=await api(`/api/services/${id}/${stage}`,{method:'PUT',body:{data:data2,submit}});
+      dirty=false;keep(res.record);
       if(submit){const t=res.teams;toast(t&&t.ok?'Submitted and posted to Teams':`Submitted and saved, but the Teams post failed (status ${t?t.status:'?'}). Check the relay.`,!(t&&t.ok),t&&t.ok?3200:7000);
         const nx=res.record.current_stage==='completed'?stage:res.record.current_stage;history.replaceState(null,'',`#/r/${id}/${nx}`);draw(res.record,nx);}
       else{toast('Draft saved');draw(res.record,stage);}
@@ -226,7 +308,7 @@ function draw(r,stage){
   if($('#submit'))$('#submit').onclick=()=>save(true);
   if($('#reopen'))$('#reopen').onclick=async()=>{
     if(!confirm('Reopen this stage? It becomes a draft you can edit, and submitting again posts a corrected message to Teams.'))return;
-    try{const res=await api(`/api/services/${id}/${stage}/reopen`,{method:'POST'});draw(res.record,stage);}catch(e){toast(e.message,true);}
+    try{const res=await api(`/api/services/${id}/${stage}/reopen`,{method:'POST'});keep(res.record);draw(res.record,stage);}catch(e){toast(e.message,true);}
   };
   wireDetails(r,stage);
 }
@@ -242,11 +324,12 @@ function drawUpdates(r){
     const lead=r.stages.inward.state!=='submitted'?'<div class="note">Daily updates open after the Inward stage is submitted.</div>':r.stages.outward.state==='submitted'?'<div class="note ok">Outward is submitted, so this pack is finished. No new updates can be added.</div>':'';
     paint(frame(r,'updates',lead+(ed&&open()?`<div class="sec">${editing?'Edit update':'Add today\'s update'}</div>${form()}`:'')+`<div class="sec">Update history (${ups().length})</div><div id="ul">${list()}</div>`,barH(),details(r)));
     wireDetails(r,'updates');
+    const uf=$('#uf');if(uf)uf.addEventListener('input',()=>{dirty=true;});
     if(editing){const u=ups().find(x=>x.id===editing);$('#ud').value=u.update_date;$('#uw').value=u.work_done;$('#us').value=u.status||'';$('#ur').value=u.remarks||'';}
     if($('#usave'))$('#usave').onclick=async()=>{
       const body={update_date:$('#ud').value,work_done:$('#uw').value,status:$('#us').value,remarks:$('#ur').value};
       $('#usave').disabled=true;
-      try{const res=await api(`/api/services/${id}/updates${editing?'/'+editing:''}`,{method:editing?'PUT':'POST',body});toast(editing?'Update saved':'Update added');r=res.record;editing=null;render();}
+      try{const res=await api(`/api/services/${id}/updates${editing?'/'+editing:''}`,{method:editing?'PUT':'POST',body});dirty=false;toast(editing?'Update saved':'Update added');r=res.record;editing=null;render();}
       catch(e){toast(e.message,true,5000);$('#usave').disabled=false;}
     };
     if($('#ucancel'))$('#ucancel').onclick=()=>{editing=null;render();};
@@ -261,7 +344,8 @@ function drawUpdates(r){
 
 /* ---------- Settings ---------- */
 function settings(){
-  paint(head('Settings',cfg.key?'#/':'')+`<div class="panel"><div class="grid"><label class="wide">Relay address<input id="u" value="${esc(cfg.url)}" placeholder="https://your-worker.workers.dev" autocapitalize="off" autocomplete="off"></label><label class="wide">App key<input id="k" type="password" value="${esc(cfg.key)}" autocapitalize="off" autocomplete="off"></label></div><p class="sub">Use the editor key to enter data, or the viewer key to look at records without changing them.</p></div><div class="bar"><button class="b p" id="s">Save and connect</button></div>${cfg.key?'<div class="mini"><button class="b d" id="out">Sign out</button></div>':''}`);
+  paint(head('Settings',cfg.key?'#/':'')+`<div class="panel"><div class="grid"><label class="wide">Relay address<input id="u" value="${esc(cfg.url)}" placeholder="https://your-worker.workers.dev" autocapitalize="off" autocomplete="off"></label><label class="wide">App key<input id="k" type="password" value="${esc(cfg.key)}" autocapitalize="off" autocomplete="off"></label></div><p class="sub">Use the editor key to enter data, or the viewer key to look at records without changing them.</p></div><button class="b p" id="s" style="width:100%;margin-top:14px">Save and connect</button>${cfg.key?'<div class="mini"><button class="b d" id="out">Sign out</button></div>':''}${cfg.key?nav('set'):''}`);
+  if($('#navx'))$('#navx').onclick=exportXlsx;
   $('#s').onclick=async()=>{
     const u=$('#u').value.trim().replace(/\/+$/,''),k=$('#k').value.trim();
     if(!/^https:\/\//.test(u)||!k)return toast('Enter the relay address (starting with https://) and the app key',true,4500);
@@ -274,7 +358,7 @@ function settings(){
 
 /* ---------- Excel ---------- */
 async function exportXlsx(){
-  const b=$('#xl');b.disabled=true;
+  const b=$('#navx')||{};b.disabled=true;
   try{
     const [all,ups]=await Promise.all([api('/api/services?limit=5000'),api('/api/updates')]);
     const rs=all.sort((a,c)=>a.id-c.id),byId=new Map(rs.map(r=>[r.id,r]));
@@ -292,8 +376,11 @@ async function exportXlsx(){
     add('Outward',outw,['Service ref','Battery no.','BMS no.',...MEAS.map(([k,l])=>lab('outward',k,l)),'Status']);
     add('Service Notes',notes,['Service ref','Battery no.','BMS no.','Inward date','Problem description','Solution proposed','Problem solved','Outward date','Status']);
     add('Daily Updates',daily,['Service ref','Battery no.','BMS no.','Pack state','Date','Work done','Status','Remarks']);
-    XLSX.writeFile(wb,'battery-service-log-'+today()+'.xlsx');
-    toast('Excel file downloaded');
+    const fname='battery-service-log-'+today()+'.xlsx',C=window.Capacitor;
+    if(C&&C.isNativePlatform&&C.isNativePlatform()){
+      const w=await C.Plugins.Filesystem.writeFile({path:fname,data:XLSX.write(wb,{type:'base64',bookType:'xlsx'}),directory:'CACHE'});
+      await C.Plugins.Share.share({title:fname,url:w.uri,dialogTitle:'Share Excel file'});
+    }else{XLSX.writeFile(wb,fname);toast('Excel file downloaded');}
   }catch(e){toast(e.message,true,5000);}finally{b.disabled=false;}
 }
 
