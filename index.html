@@ -5,64 +5,82 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Battery Service Log</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0b6b66">
+<meta name="theme-color" content="#0d0f12">
 <link rel="icon" href="icon-192.png">
 <style>
-:root{--bg:#e8edee;--card:#fff;--ink:#101c24;--sub:#5a6b75;--line:#c9d3d7;--acc:#0b6b66;--accink:#fff;--draft:#b7791f;--ok:#1f8450;--bad:#b42318;--field:#f6f9f9}
-@media(prefers-color-scheme:dark){:root{--bg:#0e171b;--card:#16242a;--ink:#e6eef0;--sub:#93a6ae;--line:#2c3f47;--acc:#3fb8b0;--accink:#06201f;--draft:#e0a73c;--ok:#4cc585;--bad:#ff8a7a;--field:#101c21}}
+/* Brand theme: change these values to restyle the whole app */
+:root{--bg:#f2f3f5;--surface:#fff;--ink:#14171a;--muted:#5d6872;--line:#dde1e6;--top:#0d0f12;--topink:#fff;--acc:#c8102e;--accink:#fff;--ok:#12805c;--warn:#b45309;--bad:#b42318;--field:#fff;--r:10px}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0c0e;--surface:#13171b;--ink:#eceff2;--muted:#95a0aa;--line:#262d34;--top:#000;--acc:#e0283f;--ok:#3fbf8f;--warn:#e0a03c;--bad:#ff8a7a;--field:#0e1114}}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
-#app{max-width:640px;margin:0 auto;padding:0 12px calc(96px + env(safe-area-inset-bottom))}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+#app{max-width:720px;margin:0 auto;padding:0 14px calc(100px + env(safe-area-inset-bottom))}
 a{color:var(--acc)}
-.top{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px;position:sticky;top:0;background:var(--bg);z-index:5}
-.top h1{font-size:19px;margin:0;flex:1;letter-spacing:-.01em}
-.back,.gear{text-decoration:none;font-size:24px;line-height:1;color:var(--ink);padding:4px 8px;margin:-4px -4px}
-.role{font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--sub)}
-.role.editor{border-color:var(--acc);color:var(--acc)}
-.tabs{display:flex;gap:6px;margin:4px 0 10px}
-.tabs button{flex:1;padding:9px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;font:inherit}
-.tabs button.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
-input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:4px}
-input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:1px}
-input[readonly],input:disabled,select:disabled,textarea:disabled{opacity:.75}
-label{display:block;font-size:13px;color:var(--sub)}
-label small{color:var(--sub);opacity:.8}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.top{position:sticky;top:0;z-index:5;margin:0 -14px 14px;background:var(--top);color:var(--topink);display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:3px solid var(--acc)}
+.top .t{flex:1;min-width:0}
+.top small{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.65}
+.top h1{margin:0;font-size:18px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top a{color:var(--topink);text-decoration:none}
+.back,.gear{font-size:22px;line-height:1;padding:6px 8px;margin:-6px -4px;border-radius:8px}
+.role{font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid rgba(255,255,255,.35)}
+.role.editor{background:var(--acc);border-color:var(--acc)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.stat b{display:block;font-size:24px;line-height:1.1;font-weight:650}
+.stat span{font-size:11.5px;color:var(--muted)}
+.stat.warn b{color:var(--warn)}
+.tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:3px;margin:12px 0}
+.tabs button{flex:1;padding:9px 6px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-weight:600}
+.tabs button.on{background:var(--top);color:var(--topink)}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:11px 12px;margin-top:5px;min-height:44px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+button:focus-visible,a:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 40%,transparent);outline-offset:2px}
+input[readonly],input:disabled,select:disabled,textarea:disabled{background:color-mix(in srgb,var(--line) 35%,var(--surface));color:var(--ink);opacity:1;-webkit-text-fill-color:var(--ink)}
+label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+label small{text-transform:none;letter-spacing:0;font-weight:400}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
 .wide{grid-column:1/-1}
-.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px;text-decoration:none;color:var(--ink)}
+.sec{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:16px 2px 8px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card{display:block;position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px 13px 18px;margin-bottom:10px;text-decoration:none;color:var(--ink);overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card.done::before{background:var(--ok)}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.bn{font-size:18px}
-.sub,.meta{font-size:13px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap;margin-top:3px}
-.cells{display:inline-flex;gap:3px;padding:3px;border:2px solid var(--sub);border-radius:5px;position:relative;margin-right:5px}
-.cells::after{content:"";position:absolute;right:-6px;top:6px;width:4px;height:8px;background:var(--sub);border-radius:0 2px 2px 0}
-.c{display:block;width:16px;height:12px;border-radius:2px;border:1px solid var(--line)}
-.c.submitted{background:var(--ok);border-color:var(--ok)}
-.c.draft{background:repeating-linear-gradient(135deg,var(--draft) 0 3px,transparent 3px 6px);border-color:var(--draft)}
-.badge{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
-.badge.draft{color:var(--draft);border-color:var(--draft)}
-.badge.ok{color:var(--ok);border-color:var(--ok)}
-.steps{display:flex;gap:6px;margin:6px 0 14px;overflow-x:auto}
-.steps a{flex:1;min-width:78px;text-align:center;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 4px;font-size:14px}
-.steps a.on{border-color:var(--acc);box-shadow:inset 0 -3px 0 var(--acc)}
-.steps i{display:block;height:5px;border-radius:3px;margin-bottom:6px;background:var(--line)}
+.bn{font-size:17px;font-weight:650}
+.sub,.meta{font-size:12.5px;color:var(--muted);display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.chip{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);background:transparent}
+.chip.draft,.chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.pips{display:inline-flex;gap:3px}
+.pips i{width:20px;height:6px;border-radius:3px;background:var(--line)}
+.pips i.submitted{background:var(--ok)}
+.pips i.draft{background:repeating-linear-gradient(135deg,var(--warn) 0 3px,transparent 3px 6px)}
+.steps{display:flex;gap:6px;margin:0 0 14px;overflow-x:auto;padding-bottom:2px}
+.steps a{flex:1;min-width:66px;text-align:center;text-decoration:none;color:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:9px 4px 8px;font-size:12.5px;font-weight:600}
+.steps a.on{color:var(--ink);border-color:var(--ink)}
+.steps i{display:block;height:4px;border-radius:2px;margin:0 8px 7px;background:var(--line)}
 .steps i.submitted{background:var(--ok)}
-.steps i.draft{background:repeating-linear-gradient(135deg,var(--draft) 0 4px,transparent 4px 8px)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;max-width:640px;margin:0 auto}
-button.b{flex:1;padding:13px;border-radius:12px;border:1px solid var(--acc);background:transparent;color:var(--acc);font:inherit;font-weight:600}
-button.b.p{background:var(--acc);color:var(--accink)}
-button.b.d{border-color:var(--bad);color:var(--bad)}
-button.b:disabled{opacity:.5}
-.fab{position:fixed;right:max(14px,calc(50% - 306px));bottom:calc(18px + env(safe-area-inset-bottom));background:var(--acc);color:var(--accink);border:0;border-radius:99px;padding:14px 20px;font:inherit;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);text-decoration:none}
-.note{padding:10px 12px;border-radius:10px;border:1px solid var(--draft);color:var(--ink);background:color-mix(in srgb,var(--draft) 12%,transparent);margin:10px 0;font-size:14px}
-.note.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
-.hint{display:block;font-size:12px;min-height:16px;color:var(--bad);margin-top:3px}
-.blank{text-align:center;color:var(--sub);padding:28px 8px}
-#toast{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:616px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;display:none;z-index:9;white-space:pre-line}
-#toast.bad{background:var(--bad);color:#fff}
-details{margin-top:14px;font-size:14px}summary{color:var(--sub);cursor:pointer}
-.mini{margin-top:12px;display:flex;gap:8px;justify-content:center}
-.mini .b{flex:none;padding:10px 16px}
+.steps i.draft{background:repeating-linear-gradient(135deg,var(--warn) 0 4px,transparent 4px 8px)}
+.steps i.log{background:var(--acc);opacity:.85}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;max-width:720px;margin:0 auto}
+.b{flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:650;min-height:46px}
+.b.p{background:var(--acc);border-color:var(--acc);color:var(--accink)}
+.b.d{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}
+.b:disabled{opacity:.45}
+.b.s{flex:none;padding:8px 14px;min-height:38px;font-size:13px}
+.fab{position:fixed;right:max(16px,calc(50% - 344px));bottom:calc(20px + env(safe-area-inset-bottom));background:var(--acc);color:var(--accink);border-radius:99px;padding:14px 22px;font-weight:650;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.note{padding:11px 13px;border-radius:var(--r);border:1px solid color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent);margin:0 0 12px;font-size:13.5px}
+.note.ok{border-color:color-mix(in srgb,var(--ok) 55%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.hint{display:block;font-size:12px;min-height:16px;color:var(--bad);margin-top:3px;text-transform:none;letter-spacing:0;font-weight:500}
+.blank{text-align:center;color:var(--muted);padding:30px 8px}
+.upd{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.upd p{margin:6px 0 0;white-space:pre-wrap}
+.upd .rm{color:var(--muted);font-size:13px}
+.ua{display:flex;gap:8px;margin-top:10px}
+#toast{position:fixed;left:14px;right:14px;bottom:calc(86px + env(safe-area-inset-bottom));max-width:692px;margin:0 auto;background:var(--top);color:#fff;padding:12px 14px;border-radius:var(--r);display:none;z-index:9;white-space:pre-line;border-left:4px solid var(--ok)}
+#toast.bad{border-left-color:var(--acc)}
+details{margin-top:16px;font-size:14px}summary{color:var(--muted);cursor:pointer;font-weight:600}
+.mini{margin-top:14px;display:flex;gap:8px;justify-content:center}
+.mini .b{flex:none;padding:10px 18px}
 @media(prefers-reduced-motion:no-preference){#toast{animation:up .18s ease-out}@keyframes up{from{transform:translateY(8px);opacity:0}}}
 </style>
 </head>
@@ -71,14 +89,18 @@ details{margin-top:14px;font-size:14px}summary{color:var(--sub);cursor:pointer}
 <div id="toast" role="status"></div>
 <script src="xlsx.mini.min.js"></script>
 <script>
+const BRAND='Raptee.HV';
 const ST=['inward','problem','solution','outward'],LBL={inward:'Inward',problem:'Problem',solution:'Solution',outward:'Outward'};
 const MEAS=[['date','Date','d'],['pack_voltage','Pack voltage (V)','n'],['max_string_voltage','Max string voltage (V)','n'],['max_string_no','Max string no.','i'],['min_string_voltage','Min string voltage (V)','n'],['min_string_no','Min string no.','i'],['max_temp','Max temp (°C)','n'],['min_temp','Min temp (°C)','n'],['diff_voltage','Diff voltage (V)','n'],['fuel_gauge','Fuel gauge o/p','t'],['soc','SOC (%)','n'],['capacity_ah','Battery capacity (Ah)','n'],['ip67_psi','IP67 test (psi)','n']];
 const FIELDS={inward:MEAS,problem:[['description','Problem description','t']],solution:[['solution','Solution proposed','t'],['solved','Problem solved','t']],outward:[...MEAS,['status','Status','t']]};
 const lab=(s,k,l)=>k==='date'?LBL[s]+' date':l;
 const STATUSES=['Serviced - OK','Serviced - with remarks','Not repairable','Returned as is'];
+const UPD_STATUS=['In progress','Testing','Waiting for parts','On hold','Ready for outward'];
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1]:(d||'');};
 let cfg={url:localStorage.getItem('bl_url')||'',key:localStorage.getItem('bl_key')||'',role:localStorage.getItem('bl_role')||''};
 
 async function api(path,o={}){
@@ -91,44 +113,45 @@ async function api(path,o={}){
 }
 let tt;function toast(m,bad,ms){const t=$('#toast');t.textContent=m;t.className=bad?'bad':'';t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',ms||3200);}
 const paint=h=>{app.innerHTML=h;window.scrollTo(0,0);};
-const head=(t,back)=>`<header class="top">${back?`<a class="back" href="${back}" aria-label="Back">&#8249;</a>`:''}<h1>${t}</h1><span class="role ${cfg.role}">${cfg.role==='editor'?'Editor':'View only'}</span><a class="gear" href="#/settings" aria-label="Settings">&#9881;</a></header>`;
-const cells=r=>`<span class="cells" aria-hidden="true">${ST.map(s=>`<i class="c ${r.stages[s].state}"></i>`).join('')}</span>`;
+const head=(t,back)=>`<header class="top">${back?`<a class="back" href="${back}" aria-label="Back">&#8249;</a>`:''}<div class="t"><small>${BRAND} Battery Service</small><h1>${t}</h1></div><span class="role ${cfg.role}">${cfg.role==='editor'?'Editor':'View only'}</span><a class="gear" href="#/settings" aria-label="Settings">&#9881;</a></header>`;
+const pips=r=>`<span class="pips" aria-hidden="true">${ST.map(s=>`<i class="${r.stages[s].state}"></i>`).join('')}</span>`;
 const isEd=()=>cfg.role==='editor';
-const fail=e=>{if(e.status===401){toast('The app key was not accepted. Check Settings.',true,5000);location.hash='/settings';}else paint(head('Error')+`<div class="note">${esc(e.message)}</div><p><a href="#/">Back to list</a></p>`);};
+const fail=e=>{if(e.status===401){toast('The app key was not accepted. Check Settings.',true,5000);location.hash='/settings';}else paint(head('Error','#/')+`<div class="note">${esc(e.message)}</div>`);};
+const inWin=r=>r.stages.inward.state==='submitted'&&r.stages.outward.state!=='submitted';
 
 /* ---------- Home ---------- */
 let tab='open',q='';
 async function home(){
   paint(head('Battery Service Log')+'<p class="blank">Loading...</p>');
   let list;try{list=await api('/api/services?limit=1000');}catch(e){return fail(e);}
-  const draw=()=>{
-    const done=r=>r.current_stage==='completed';
-    const f=list.filter(r=>(!q||(r.battery_no+' '+r.bms_no).toUpperCase().includes(q.toUpperCase())));
+  const t=today(),done=r=>r.current_stage==='completed';
+  const drawList=()=>{
+    const f=list.filter(r=>!q||(r.battery_no+' '+r.bms_no).toUpperCase().includes(q.toUpperCase()));
     const open=f.filter(r=>!done(r)),comp=f.filter(done),shown=tab==='open'?open:comp;
     $('#tabs').innerHTML=`<button class="${tab==='open'?'on':''}" data-t="open">In progress (${open.length})</button><button class="${tab==='done'?'on':''}" data-t="done">Completed (${comp.length})</button>`;
     $('#list').innerHTML=shown.length?shown.map(r=>{
-      const cur=r.current_stage,dr=cur!=='completed'&&r.stages[cur].state==='draft';
-      const o=r.stages.outward.data;
-      return `<a class="card" href="#/r/${r.id}"><div class="row"><b class="bn">${esc(r.battery_no)}</b>${cells(r)}</div><div class="sub"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div><div class="meta">${done(r)?`<span class="badge ok">Completed</span>${o.date?`<span>Out ${esc(o.date)}</span>`:''}${o.status?`<span>${esc(o.status)}</span>`:''}`:`<span>Next: ${LBL[cur]}</span>${dr&&isEd()?'<span class="badge draft">Draft saved</span>':''}`}</div></a>`;}).join('')
+      const cur=r.current_stage,dr=cur!=='completed'&&r.stages[cur].state==='draft',o=r.stages.outward.data,w=inWin(r);
+      return `<a class="card ${done(r)?'done':''}" href="#/r/${r.id}"><div class="row"><b class="bn">${esc(r.battery_no)}</b>${pips(r)}</div><div class="sub"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div><div class="meta">${done(r)?`<span class="chip ok">Completed</span>${o.date?`<span>Out ${fmt(o.date)}</span>`:''}${o.status?`<span>${esc(o.status)}</span>`:''}`:`<span class="chip">Next: ${LBL[cur]}</span>${dr&&isEd()?'<span class="chip draft">Draft saved</span>':''}${w?(r.last_update===t?`<span class="chip ok">Updated today</span>`:`<span class="chip warn">No update today</span>`):''}${w&&r.last_update?`<span>Last update ${fmt(r.last_update)}</span>`:''}`}</div></a>`;}).join('')
       :`<p class="blank">${q?'No battery matches that search.':tab==='open'?(isEd()?'Nothing in progress. Tap New battery to start.':'Nothing in progress.'):'No completed services yet.'}</p>`;
   };
-  paint(head('Battery Service Log')+`<input id="q" type="search" placeholder="Search battery or BMS number" value="${esc(q)}" aria-label="Search"><div class="tabs" id="tabs" style="margin-top:10px"></div><div id="list"></div><div class="mini"><button class="b" id="xl">Download Excel</button></div>${isEd()?'<a class="fab" href="#/new">+ New battery</a>':''}`);
-  draw();
-  $('#q').oninput=e=>{q=e.target.value.trim();draw();};
-  $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw();}};
+  const openAll=list.filter(r=>!done(r)),missing=openAll.filter(r=>inWin(r)&&r.last_update!==t).length;
+  paint(head('Battery Service Log')+`<div class="stats"><div class="stat"><b>${openAll.length}</b><span>In progress</span></div><div class="stat ${missing?'warn':''}"><b>${missing}</b><span>No update today</span></div><div class="stat"><b>${list.length-openAll.length}</b><span>Completed</span></div></div><input id="q" type="search" placeholder="Search battery or BMS number" value="${esc(q)}" aria-label="Search"><div class="tabs" id="tabs"></div><div id="list"></div><div class="mini"><button class="b" id="xl">Download Excel</button></div>${isEd()?'<a class="fab" href="#/new">+ New battery</a>':''}`);
+  drawList();
+  $('#q').oninput=e=>{q=e.target.value.trim();drawList();};
+  $('#tabs').onclick=e=>{const x=e.target.dataset.t;if(x){tab=x;drawList();}};
   $('#xl').onclick=exportXlsx;
 }
 
 /* ---------- New ---------- */
 function newRec(){
   if(!isEd())return location.hash='/';
-  paint(head('New battery','#/')+`<div class="panel"><label>Battery number<input id="bn" autocomplete="off" autocapitalize="characters"></label><div style="height:12px"></div><label>BMS number<input id="bms" autocomplete="off"></label><div id="found"></div></div><div class="bar"><button class="b p" id="go">Start inward stage</button></div>`);
+  paint(head('New battery','#/')+`<div class="panel"><div class="grid"><label class="wide">Battery number<input id="bn" autocomplete="off" autocapitalize="characters"></label><label class="wide">BMS number<input id="bms" autocomplete="off"></label></div></div><div id="found" style="margin-top:14px"></div><div class="bar"><button class="b p" id="go">Start inward stage</button></div>`);
   let tm;
   $('#bn').oninput=()=>{clearTimeout(tm);tm=setTimeout(async()=>{
     const v=$('#bn').value.trim();if(!v){$('#found').innerHTML='';return;}
     try{const rs=await api('/api/services?battery_no='+encodeURIComponent(v));
       if(v!==$('#bn').value.trim())return;
-      $('#found').innerHTML=rs.length?`<div class="note"><b>Already in the log.</b> ${rs.length} earlier record${rs.length>1?'s':''} for this battery${rs.some(r=>r.current_stage!=='completed')?'. One is unfinished, so continue it instead of starting a new one.':'.'}</div>`+rs.map(r=>`<a class="card" href="#/r/${r.id}"><div class="row"><b>${esc(r.ref)}</b>${cells(r)}</div><div class="meta"><span>In ${esc(r.stages.inward.data.date||'-')}</span><span>Out ${esc(r.stages.outward.data.date||'-')}</span><span>${r.current_stage==='completed'?esc(r.stages.outward.data.status||'Completed'):'Next: '+LBL[r.current_stage]}</span></div></a>`).join(''):'<div class="note ok">New battery. No earlier service found.</div>';
+      $('#found').innerHTML=rs.length?`<div class="note"><b>Already in the log.</b> ${rs.length} earlier record${rs.length>1?'s':''} for this battery${rs.some(r=>r.current_stage!=='completed')?'. One is unfinished, so continue it instead of starting a new one.':'.'}</div>`+rs.map(r=>`<a class="card ${r.current_stage==='completed'?'done':''}" href="#/r/${r.id}"><div class="row"><b>${esc(r.ref)}</b>${pips(r)}</div><div class="meta"><span>In ${fmt(r.stages.inward.data.date)||'-'}</span><span>Out ${fmt(r.stages.outward.data.date)||'-'}</span><span>${r.current_stage==='completed'?esc(r.stages.outward.data.status||'Completed'):'Next: '+LBL[r.current_stage]}</span></div></a>`).join(''):'<div class="note ok">New battery. No earlier service found.</div>';
     }catch(e){$('#found').innerHTML='';}
   },350);};
   $('#go').onclick=async()=>{
@@ -152,10 +175,26 @@ function fld(s,k,l,t,v,ro){
 async function record(id,sp){
   paint(head('Loading...','#/'));
   let r;try{r=await api('/api/services/'+id);}catch(e){return fail(e);}
-  const stage=ST.includes(sp)?sp:(r.current_stage==='completed'?'outward':r.current_stage);
-  draw(r,stage);
+  if(sp==='updates')return draw(r,'updates');
+  draw(r,ST.includes(sp)?sp:(r.current_stage==='completed'?'outward':r.current_stage));
+}
+function frame(r,stage,inner,bar,extra){
+  const id=r.id;
+  return head(esc(r.battery_no),'#/')+`<div class="sub" style="margin:0 0 12px"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div>
+  <nav class="steps">${ST.slice(0,3).map(s=>`<a href="#/r/${id}/${s}" class="${s===stage?'on':''}"><i class="${r.stages[s].state}"></i>${LBL[s]}</a>`).join('')}<a href="#/r/${id}/updates" class="${stage==='updates'?'on':''}"><i class="log"></i>Daily log${(r.updates||[]).length?' ('+r.updates.length+')':''}</a><a href="#/r/${id}/outward" class="${stage==='outward'?'on':''}"><i class="${r.stages.outward.state}"></i>Outward</a></nav>${inner}${extra||''}${bar||''}`;
+}
+function details(r){
+  return isEd()?`<details><summary>Battery details</summary><div class="grid" style="margin-top:10px"><label>Battery number<input id="mb" value="${esc(r.battery_no)}"></label><label>BMS number<input id="mm" value="${esc(r.bms_no)}"></label></div><div class="mini"><button class="b" id="msave">Save details</button><button class="b d" id="del">Delete record</button></div></details>`:'';
+}
+function wireDetails(r,back){
+  if($('#msave'))$('#msave').onclick=async()=>{try{const x=await api(`/api/services/${r.id}/meta`,{method:'PUT',body:{battery_no:$('#mb').value,bms_no:$('#mm').value}});toast('Details saved');draw(x,back);}catch(e){toast(e.message,true);}};
+  if($('#del'))$('#del').onclick=async()=>{
+    if(!confirm(`Delete ${r.battery_no} (${r.ref}) with all its stages and daily updates? This cannot be undone.`))return;
+    try{await api('/api/services/'+r.id,{method:'DELETE'});toast('Record deleted');location.hash='/';}catch(e){toast(e.message,true);}
+  };
 }
 function draw(r,stage){
+  if(stage==='updates')return drawUpdates(r);
   const id=r.id,S=r.stages[stage],ed=isEd(),ro=!ed||S.state==='submitted';
   const data={...S.data};
   if(!ro)FIELDS[stage].forEach(([k,,t])=>{if(t==='d'&&!data[k])data[k]=today();});
@@ -164,18 +203,11 @@ function draw(r,stage){
   if(!ed&&S.state!=='submitted')body='<p class="blank">This stage has not been recorded yet.</p>';
   else body=`<div class="panel"><div class="grid" id="f">${FIELDS[stage].map(([k,l,t])=>fld(stage,k,l,t,data[k],ro)).join('')}</div></div>`;
   const bar=!ed?'':S.state==='submitted'?`<div class="bar"><button class="b" id="reopen">Reopen to edit</button></div>`:`<div class="bar"><button class="b" id="draft">Save draft</button><button class="b p" id="submit"${prior.length?' disabled':''}>Submit to Teams</button></div>`;
-  paint(head(esc(r.battery_no),'#/')+`<div class="sub" style="margin:0 0 10px"><span>${esc(r.ref)}</span>${r.bms_no?`<span>BMS ${esc(r.bms_no)}</span>`:''}</div>
-  <nav class="steps">${ST.map(s=>`<a href="#/r/${id}/${s}" class="${s===stage?'on':''}"><i class="${r.stages[s].state}"></i>${LBL[s]}</a>`).join('')}</nav>
-  ${ed&&S.state==='draft'?'<div class="note">Draft saved. Nothing has been posted to Teams yet.</div>':''}
-  ${ed&&S.state==='submitted'?'<div class="note ok">Submitted and posted to Teams.</div>':''}
-  ${ed&&prior.length&&S.state!=='submitted'?`<div class="note">You can save a draft now. Submit the ${prior.map(s=>LBL[s]).join(', ')} stage first to submit this one.</div>`:''}
-  ${body}${ed?`<details><summary>Battery details</summary><div class="grid" style="margin-top:10px"><label>Battery number<input id="mb" value="${esc(r.battery_no)}"></label><label>BMS number<input id="mm" value="${esc(r.bms_no)}"></label></div><div class="mini"><button class="b" id="msave">Save details</button><button class="b d" id="del">Delete record</button></div></details>`:''}${bar}`);
+  const notes=`${ed&&S.state==='draft'?'<div class="note">Draft saved. Nothing has been posted to Teams yet.</div>':''}${ed&&S.state==='submitted'?'<div class="note ok">Submitted and posted to Teams.</div>':''}${ed&&prior.length&&S.state!=='submitted'?`<div class="note">You can save a draft now. Submit the ${prior.map(s=>LBL[s]).join(', ')} stage first to submit this one.</div>`:''}`;
+  paint(frame(r,stage,notes+body,bar,details(r)));
   const F=$('#f');
   if(F&&!ro){
-    const g=k=>F.querySelector(`[data-k="${k}"]`);
-    const upd=()=>{
-      const ip=g('ip67_psi');if(ip){const v=ip.value,bad=v!==''&&(!(+v>=20)||+v>40);$('#ipH').textContent=bad?'IP67 test must be between 20 and 40 psi':'';}
-    };
+    const upd=()=>{const ip=F.querySelector('[data-k=ip67_psi]');if(ip){const v=ip.value,bad=v!==''&&(!(+v>=20)||+v>40);$('#ipH').textContent=bad?'IP67 test must be between 20 and 40 psi':'';}};
     F.addEventListener('input',upd);upd();
   }
   const collect=()=>{const o={};if(F)F.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);return o;};
@@ -196,16 +228,40 @@ function draw(r,stage){
     if(!confirm('Reopen this stage? It becomes a draft you can edit, and submitting again posts a corrected message to Teams.'))return;
     try{const res=await api(`/api/services/${id}/${stage}/reopen`,{method:'POST'});draw(res.record,stage);}catch(e){toast(e.message,true);}
   };
-  if($('#msave'))$('#msave').onclick=async()=>{try{const x=await api(`/api/services/${id}/meta`,{method:'PUT',body:{battery_no:$('#mb').value,bms_no:$('#mm').value}});toast('Details saved');draw(x,stage);}catch(e){toast(e.message,true);}};
-  if($('#del'))$('#del').onclick=async()=>{
-    if(!confirm(`Delete ${r.battery_no} (${r.ref}) and all its stages? This cannot be undone.`))return;
-    try{await api('/api/services/'+id,{method:'DELETE'});toast('Record deleted');location.hash='/';}catch(e){toast(e.message,true);}
+  wireDetails(r,stage);
+}
+
+/* ---------- Daily updates ---------- */
+function drawUpdates(r){
+  const id=r.id,ed=isEd(),ups=()=>r.updates||[],open=()=>inWin(r);
+  let editing=null;
+  const form=()=>`<div class="panel" id="uf"><div class="grid"><label class="wide">Date<input id="ud" type="date" value="${today()}"></label><label class="wide">Work done<textarea id="uw" rows="5" placeholder="What was done on this pack today"></textarea></label><label class="wide">Current status<input id="us" list="usl" autocomplete="off" placeholder="Select or type"><datalist id="usl">${UPD_STATUS.map(x=>`<option value="${x}">`).join('')}</datalist></label><label class="wide">Remarks <small>optional</small><textarea id="ur" rows="3"></textarea></label></div></div>`;
+  const list=()=>ups().length?ups().map(u=>`<article class="upd"><div class="row"><b>${fmt(u.update_date)}</b>${u.status?`<span class="chip">${esc(u.status)}</span>`:''}</div><p>${esc(u.work_done)}</p>${u.remarks?`<p class="rm">${esc(u.remarks)}</p>`:''}${ed?`<div class="ua"><button class="b s" data-e="${u.id}">Edit</button><button class="b s d" data-d="${u.id}">Delete</button></div>`:''}</article>`).join(''):'<p class="blank">No daily updates yet.</p>';
+  const barH=()=>ed&&open()?`<div class="bar">${editing?'<button class="b" id="ucancel">Cancel</button>':''}<button class="b p" id="usave">${editing?'Save changes':'Add update'}</button></div>`:'';
+  const render=()=>{
+    const lead=r.stages.inward.state!=='submitted'?'<div class="note">Daily updates open after the Inward stage is submitted.</div>':r.stages.outward.state==='submitted'?'<div class="note ok">Outward is submitted, so this pack is finished. No new updates can be added.</div>':'';
+    paint(frame(r,'updates',lead+(ed&&open()?`<div class="sec">${editing?'Edit update':'Add today\'s update'}</div>${form()}`:'')+`<div class="sec">Update history (${ups().length})</div><div id="ul">${list()}</div>`,barH(),details(r)));
+    wireDetails(r,'updates');
+    if(editing){const u=ups().find(x=>x.id===editing);$('#ud').value=u.update_date;$('#uw').value=u.work_done;$('#us').value=u.status||'';$('#ur').value=u.remarks||'';}
+    if($('#usave'))$('#usave').onclick=async()=>{
+      const body={update_date:$('#ud').value,work_done:$('#uw').value,status:$('#us').value,remarks:$('#ur').value};
+      $('#usave').disabled=true;
+      try{const res=await api(`/api/services/${id}/updates${editing?'/'+editing:''}`,{method:editing?'PUT':'POST',body});toast(editing?'Update saved':'Update added');r=res.record;editing=null;render();}
+      catch(e){toast(e.message,true,5000);$('#usave').disabled=false;}
+    };
+    if($('#ucancel'))$('#ucancel').onclick=()=>{editing=null;render();};
+    $('#ul').onclick=async e=>{
+      const ei=e.target.dataset.e,di=e.target.dataset.d;
+      if(ei){if(!open())return toast('This pack is finished, so its updates can no longer be edited here.',true,4500);editing=+ei;render();}
+      if(di&&confirm('Delete this daily update?')){try{const res=await api(`/api/services/${id}/updates/${di}`,{method:'DELETE'});r=res.record;render();toast('Update deleted');}catch(x){toast(x.message,true);}}
+    };
   };
+  render();
 }
 
 /* ---------- Settings ---------- */
 function settings(){
-  paint(head('Settings',cfg.key?'#/':'')+`<div class="panel"><label>Relay address<input id="u" value="${esc(cfg.url)}" placeholder="https://your-worker.workers.dev" autocapitalize="off" autocomplete="off"></label><div style="height:12px"></div><label>App key<input id="k" type="password" value="${esc(cfg.key)}" autocapitalize="off" autocomplete="off"></label><p class="sub">Use the editor key to enter data, or the viewer key to look at records without changing them.</p></div><div class="bar"><button class="b p" id="s">Save and connect</button></div>${cfg.key?'<div class="mini"><button class="b d" id="out">Sign out</button></div>':''}`);
+  paint(head('Settings',cfg.key?'#/':'')+`<div class="panel"><div class="grid"><label class="wide">Relay address<input id="u" value="${esc(cfg.url)}" placeholder="https://your-worker.workers.dev" autocapitalize="off" autocomplete="off"></label><label class="wide">App key<input id="k" type="password" value="${esc(cfg.key)}" autocapitalize="off" autocomplete="off"></label></div><p class="sub">Use the editor key to enter data, or the viewer key to look at records without changing them.</p></div><div class="bar"><button class="b p" id="s">Save and connect</button></div>${cfg.key?'<div class="mini"><button class="b d" id="out">Sign out</button></div>':''}`);
   $('#s').onclick=async()=>{
     const u=$('#u').value.trim().replace(/\/+$/,''),k=$('#k').value.trim();
     if(!/^https:\/\//.test(u)||!k)return toast('Enter the relay address (starting with https://) and the app key',true,4500);
@@ -220,19 +276,22 @@ function settings(){
 async function exportXlsx(){
   const b=$('#xl');b.disabled=true;
   try{
-    const rs=(await api('/api/services?limit=5000')).sort((a,c)=>a.id-c.id);
+    const [all,ups]=await Promise.all([api('/api/services?limit=5000'),api('/api/updates')]);
+    const rs=all.sort((a,c)=>a.id-c.id),byId=new Map(rs.map(r=>[r.id,r]));
     const sub=(r,s)=>r.stages[s].state==='submitted'?r.stages[s].data:null;
     const base=r=>({'Service ref':r.ref,'Battery no.':r.battery_no,'BMS no.':r.bms_no});
     const meas=(s,d)=>{const o={};MEAS.forEach(([k,l])=>o[lab(s,k,l)]=d[k]??'');return o;};
     const inw=rs.filter(r=>sub(r,'inward')).map(r=>({...base(r),...meas('inward',sub(r,'inward'))}));
     const outw=rs.filter(r=>sub(r,'outward')).map(r=>({...base(r),...meas('outward',sub(r,'outward')),'Status':sub(r,'outward').status??''}));
     const notes=rs.filter(r=>sub(r,'problem')||sub(r,'solution')).map(r=>{const p=sub(r,'problem')||{},s=sub(r,'solution')||{};return{...base(r),'Inward date':(sub(r,'inward')||{}).date??'','Problem description':p.description??'','Solution proposed':s.solution??'','Problem solved':s.solved==='yes'?'Yes':s.solved==='no'?'No':'','Outward date':(sub(r,'outward')||{}).date??'','Status':(sub(r,'outward')||{}).status??''};});
-    if(!inw.length&&!outw.length&&!notes.length){toast('Nothing submitted yet, so there is nothing to export.',true);return;}
+    const daily=ups.filter(u=>byId.has(u.service_id)).map(u=>{const r=byId.get(u.service_id);return{...base(r),'Pack state':r.current_stage==='completed'?'Completed':'In progress','Date':u.update_date,'Work done':u.work_done,'Status':u.status,'Remarks':u.remarks};});
+    if(!inw.length&&!outw.length&&!notes.length&&!daily.length){toast('Nothing submitted yet, so there is nothing to export.',true);return;}
     const wb=XLSX.utils.book_new();
-    const add=(name,rows,hdr)=>{const ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([hdr]);const cols=Object.keys(rows[0]||{}).length?Object.keys(rows[0]):hdr;ws['!cols']=cols.map(h=>({wch:Math.max(12,String(h).length+2)}));XLSX.utils.book_append_sheet(wb,ws,name);};
+    const add=(name,rows,hdr)=>{const ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([hdr]);const cols=Object.keys(rows[0]||{}).length?Object.keys(rows[0]):hdr;ws['!cols']=cols.map(h=>({wch:/Work done|description|Solution proposed|Remarks/i.test(h)?40:Math.max(12,String(h).length+2)}));XLSX.utils.book_append_sheet(wb,ws,name);};
     add('Inward',inw,['Service ref','Battery no.','BMS no.',...MEAS.map(([k,l])=>lab('inward',k,l))]);
     add('Outward',outw,['Service ref','Battery no.','BMS no.',...MEAS.map(([k,l])=>lab('outward',k,l)),'Status']);
     add('Service Notes',notes,['Service ref','Battery no.','BMS no.','Inward date','Problem description','Solution proposed','Problem solved','Outward date','Status']);
+    add('Daily Updates',daily,['Service ref','Battery no.','BMS no.','Pack state','Date','Work done','Status','Remarks']);
     XLSX.writeFile(wb,'battery-service-log-'+today()+'.xlsx');
     toast('Excel file downloaded');
   }catch(e){toast(e.message,true,5000);}finally{b.disabled=false;}
